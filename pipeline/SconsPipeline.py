@@ -1,6 +1,7 @@
-from SCons.Script import *
 import os
 import re
+
+from SCons.Script import *
 
 try:
   from traj import MeasurementsTable
@@ -9,7 +10,7 @@ except ImportError:
     raise Exception("No module named traj")
 
 try:
-  from ui.genetiff import Reader
+  from python.ui import Reader
   def thumbnail(target, source, env):
     import Image
     Image.fromarray( Reader(source[0].path)[0] ).save( target[0].path )

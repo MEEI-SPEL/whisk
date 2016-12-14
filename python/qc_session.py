@@ -11,105 +11,108 @@
     >>> legend(out.keys())
 
 """
-import traj
+from . import traj
 from numpy import *
 from pylab import *
 
 
-def trial_matrix(root,iwhisker=0,ifeature=3):
-  """ image plot of a feature for a whisker where each row is a trial
+def trial_matrix(root, iwhisker=0, ifeature=3):
+    """ image plot of a feature for a whisker where each row is a trial
   """
 
-  import fnmatch
-  import os
+    import fnmatch
+    import os
 
-  def gen_names(root):
-    for r,dirnames,filenames in os.walk(root):
-      for filename in fnmatch.filter(filenames,'*.measurements'):
-        yield os.path.join(r,filename)
+    def gen_names(root):
+        for r, dirnames, filenames in os.walk(root):
+            for filename in fnmatch.filter(filenames, '*.measurements'):
+                yield os.path.join(r, filename)
 
-  return gen_trial_matrix(list(gen_names),iwhisker,ifeature)
+    return gen_trial_matrix(list(gen_names), iwhisker, ifeature)
+
 
 def seq2measurements(seq_generator):
-  for n in seq_generator:
-    yield os.path.splitext(n)[0]+'.measurements'
-
-def select_by_trialid(annotation,trialid):
-  for k,v in annotation.data.items():
-    if v == trialid:
-      yield os.path.splitext(k)[0]+'.measurements'
+    for n in seq_generator:
+        yield os.path.splitext(n)[0] + '.measurements'
 
 
-def gen_trial_matrix(generator,iwhisker=0,ifeature=5):
+def select_by_trialid(annotation, trialid):
+    for k, v in annotation.data.items():
+        if v == trialid:
+            yield os.path.splitext(k)[0] + '.measurements'
 
-  filecount = len(list(generator))
-  timecount = 0;
-  for n in generator:
-    table = traj.MeasurementsTable(n)    
-    data = table.asarray()
-    timecount = data[:,1].max()+1 + 10 #adding a fudge factor
-    break
 
-  im = nan*zeros((filecount,timecount));
+def gen_trial_matrix(generator, iwhisker=0, ifeature=5):
+    filecount = len(list(generator))
+    timecount = 0
+    for n in generator:
+        table = traj.MeasurementsTable(n)
+        data = table.asarray()
+        timecount = data[:, 1].max() + 1 + 10  # adding a fudge factor
+        break
 
-  for i,n in enumerate(generator):
-    try:
-      print("[%5d of %5d] %s"%(i,filecount,n))
-      table = traj.MeasurementsTable(n)    
-      data = table.asarray()
+    im = nan * zeros((filecount, timecount))
 
-      mask = data[:,0]==iwhisker; # select whisker
-      t = data[mask,1].astype(uint);    # get times
-      v = data[mask,ifeature];    # get feature
-      im[i,t] = v;         # fill row
-    except:
-      pass
+    for i, n in enumerate(generator):
+        try:
+            print("[%5d of %5d] %s" % (i, filecount, n))
+            table = traj.MeasurementsTable(n)
+            data = table.asarray()
 
-  return im
+            mask = data[:, 0] == iwhisker  # select whisker
+            t = data[mask, 1].astype(uint)  # get times
+            v = data[mask, ifeature]  # get feature
+            im[i, t] = v  # fill row
+        except:
+            pass
 
-def gen_trial_matrix2(generator,iwhisker=0,ifeatures=[5,6]):
+    return im
 
-  nfeat = len(ifeatures)
-  filecount = len(list(generator))
-  timecount = 0;
-  for n in generator:
-    table = traj.MeasurementsTable(n)    
-    data = table.asarray()
-    timecount = data[:,1].max()+1 + 10 #adding a fudge factor
-    break
 
-  im = nan*zeros((nfeat,filecount,timecount));
+def gen_trial_matrix2(generator, iwhisker=0, ifeatures=[5, 6]):
+    nfeat = len(ifeatures)
+    filecount = len(list(generator))
+    timecount = 0
+    for n in generator:
+        table = traj.MeasurementsTable(n)
+        data = table.asarray()
+        timecount = data[:, 1].max() + 1 + 10  # adding a fudge factor
+        break
 
-  for i,n in enumerate(generator):
-    try:
-      print("[%5d of %5d] %s"%(i,filecount,n))
-      table = traj.MeasurementsTable(n)    
-      data = table.asarray()
+    im = nan * zeros((nfeat, filecount, timecount))
 
-      mask = data[:,0]==iwhisker; # select whisker
-      t = data[mask,1].astype(uint);    # get times
-      for j,ifeat in enumerate(ifeatures):
-        im[j,i,t] = data[mask,ifeat];# get feature
-    except:
-      pass
+    for i, n in enumerate(generator):
+        try:
+            print("[%5d of %5d] %s" % (i, filecount, n))
+            table = traj.MeasurementsTable(n)
+            data = table.asarray()
 
-  return im
+            mask = data[:, 0] == iwhisker  # select whisker
+            t = data[mask, 1].astype(uint)  # get times
+            for j, ifeat in enumerate(ifeatures):
+                im[j, i, t] = data[mask, ifeat]  # get feature
+        except:
+            pass
+
+    return im
 
 
 def robustmean(im):
-  out = im.mean(0)
-  for icol in find(isnan(out)):
-    mask = ~isnan(im[:,icol])
-    out[icol] = im[mask,icol].mean()
-  return out
+    out = im.mean(0)
+    for icol in find(isnan(out)):
+        mask = ~isnan(im[:, icol])
+        out[icol] = im[mask, icol].mean()
+    return out
 
 
 import fnmatch
 import os
-from reader import Reader
+from .ui.reader import Reader
 import pickle as pickle
+
+
 class annotate_trials:
-  """
+    """
     This class is a little utility that is launched when the class is
     instanced.  It will look for data in the file specified by <filename> and
     match that against .seq files (recursively) found under <root>.  For any
@@ -135,262 +138,271 @@ class annotate_trials:
     
   """
 
-  def __init__(self,root,iframe=1000,filename="default.trialtypes.pickle"):
+    def __init__(self, root, iframe=1000, filename="default.trialtypes.pickle"):
 
-    try:
-      self.load(filename)
-    except IOError:
-      self.data = {}
-    self.default_filename = filename
+        try:
+            self.load(filename)
+        except IOError:
+            self.data = {}
+        self.default_filename = filename
 
-    def gen_names(root):
-      for r,dirnames,filenames in os.walk(root):
-        for filename in fnmatch.filter(filenames,'*.seq'):
-          name = os.path.join(r,filename) 
-          if name not in self.data:
-            yield name
+        def gen_names(root):
+            for r, dirnames, filenames in os.walk(root):
+                for filename in fnmatch.filter(filenames, '*.seq'):
+                    name = os.path.join(r, filename)
+                    if name not in self.data:
+                        yield name
 
-    self.iframe = iframe
-    self.g = gen_names(root)
-    try:
-      self.n = next(self.g)
-    except StopIteration:
-      return
+        self.iframe = iframe
+        self.g = gen_names(root)
+        try:
+            self.n = next(self.g)
+        except StopIteration:
+            return
 
-    # start annotating if there is any work to do
-    movie  = Reader(self.n,adjuststipple=True)
-    self.f = figure()
-    def totitle(name):
-      return os.path.split(name)[-1]
-    def onkeypress(event):
-      print(totitle(self.n), event.key)
-      self.data[self.n] = event.key
-      if(self.default_filename):
-        self.save(self.default_filename)
+        # start annotating if there is any work to do
+        movie = Reader(self.n, adjuststipple=True)
+        self.f = figure()
 
-      self.n = next(self.g)
-      print("Loading: "+totitle(self.n))
-      movie = Reader(self.n,adjuststipple=True)
-      print("Showing")
-      clf()
-      imshow(movie[self.iframe],interpolation='nearest')
-      self.drawrefs()
-      grid(True)
-      axis('image')
-      title(totitle(self.n))
-      draw()
+        def totitle(name):
+            return os.path.split(name)[-1]
+
+        def onkeypress(event):
+            print(totitle(self.n), event.key)
+            self.data[self.n] = event.key
+            if (self.default_filename):
+                self.save(self.default_filename)
+
+            self.n = next(self.g)
+            print("Loading: " + totitle(self.n))
+            movie = Reader(self.n, adjuststipple=True)
+            print("Showing")
+            clf()
+            imshow(movie[self.iframe], interpolation='nearest')
+            self.drawrefs()
+            grid(True)
+            axis('image')
+            title(totitle(self.n))
+            draw()
+
+        self.f.canvas.mpl_connect('key_press_event', onkeypress)
+        imshow(movie[self.iframe], interpolation='nearest')
+        self.drawrefs()
+        grid(True)
+        title(totitle(self.n))
+        axis('image')
+        gray()
+        show()
+
+    def drawrefs(self):
+        # bar positions - specific to Leo's curated data
+        xs = [129, 179, 228, 275, 426]
+        ys = [88, 88, 88, 88, 88]
+        for i, (x, y) in enumerate(zip(xs, ys)):
+            text(x, y, str(i + 1), color='r')
+        plot(xs, ys, 'r.')
+
+    def save(self, filename):
+        pickle.dump(self.data, open(filename, "w"))
+        self.default_filename = filename
+
+    def load(self, filename):
+        self.data = pickle.load(open(filename, "r"))
+        self.default_filename = filename
+
+    def by_type_session(self):
+        out = {}
+        for k, v in self.data.items():
+            t = out.get(v, {})
+            head = lambda x: os.path.split(x)[0]
+            tail = lambda x: os.path.split(x)[-1]
+            s = t.get(tail(head(k)), [])
+            s.append(k)
+            t[tail(head(k))] = s
+            out[v] = t
+        return out
 
 
-    self.f.canvas.mpl_connect('key_press_event',onkeypress)
-    imshow(movie[self.iframe],interpolation='nearest')
-    self.drawrefs()
-    grid(True)
-    title(totitle(self.n))
-    axis('image')
-    gray()  
-    show()
+def plot_angle_v_curvature(isession, saveto=''):
+    a = annotate_trials(r"F:\CuratedSessions", filename=r"F:\CuratedSessions\all.trialtypes.pickle")
+    out = a.by_type_session()
+    # do 3 whiskers
+    for i in range(3):
+        f = lambda k: gen_trial_matrix2(
+            list(seq2measurements(list(out[str(k)].values())[isession])), i, [5, 6])
+        figure()
+        # do first 3 trial types, last two are less interesting (more noisy)
+        for j in range(1, 4):
+            im = f(j)
+            plot(im[0].ravel(), im[1].ravel(), '.', alpha=0.1)
+        axis([-130, -10, -0.015, 0.015])
+        legend(list(map(str, list(range(1, 4)))))
+        title('Whisker %d' % i)
+        if saveto:
+            session = list(out.values())[0].keys()[isession]
+            savefig(os.path.join(saveto, session + '__angle_v_curvature__whisker_%d.png' % i))
 
-  def drawrefs(self):
-    #bar positions - specific to Leo's curated data
-    xs = [129,179,228,275,426]
-    ys = [88,88,88,88,88]
-    for i,(x,y) in enumerate(zip(xs,ys)):
-      text(x,y,str(i+1),color='r')
-    plot(xs,ys,'r.')
-
-  def save(self,filename):    
-    pickle.dump(self.data,open(filename,"w"));
-    self.default_filename = filename
-
-  def load(self,filename):
-    self.data = pickle.load(open(filename,"r"));
-    self.default_filename = filename
-
-  def by_type_session(self):
-    out = {}
-    for k,v in self.data.items():
-      t = out.get(v,{})
-      head = lambda x: os.path.split(x)[0]
-      tail = lambda x: os.path.split(x)[-1]
-      s = t.get( tail(head(k)), [] )
-      s.append(k)
-      t[tail(head(k))] = s
-      out[v] = t;
-    return out
-      
-def plot_angle_v_curvature(isession,saveto=''):
-  a = annotate_trials(r"F:\CuratedSessions", filename=r"F:\CuratedSessions\all.trialtypes.pickle")
-  out = a.by_type_session()
-  #do 3 whiskers
-  for i in range(3):
-    f = lambda k: gen_trial_matrix2(
-        list(seq2measurements(list(out[str(k)].values())[isession])),i,[5,6])
-    figure()
-    # do first 3 trial types, last two are less interesting (more noisy)
-    for j in range(1,4):
-      im = f(j)
-      plot(im[0].ravel(),im[1].ravel(),'.',alpha = 0.1)
-    axis([-130,-10,-0.015,0.015])
-    legend(list(map(str,list(range(1,4)))))
-    title('Whisker %d'%i)
-    if saveto:
-      session = list(out.values())[0].keys()[isession]
-      savefig(os.path.join(saveto,session+'__angle_v_curvature__whisker_%d.png'%i))
 
 def plot_specgrams(isession):
-  a = annotate_trials(r"F:\CuratedSessions", filename=r"F:\CuratedSessions\all.trialtypes.pickle")
-  out = a.by_type_session()
-  #do 3 whiskers
-  for i in range(3):
-    f = lambda k: gen_trial_matrix(
-        list(seq2measurements(list(out[str(k)].values())[isession])),i,5)
-    figure()
-    for j in range(1,6):
-      subplot(5,1,j)
-      trials = f(j)
-      trials[isnan(trials)] = trials[~isnan(trials)].mean()
-      acc = None
-      for row in trials:
-        pxx,freqs,bins,im=specgram(row,Fs=1000,interpolation='nearest',NFFT=128,noverlap= 64,scale_by_freq=1,hold=0)
-        if acc is None:
-          acc = log(pxx)
-        else:
-          acc += log(pxx)
-      acc /= float(len(trials))
-      cla()
-      imshow(acc,interpolation='nearest')
-      axis("tight")
-
-def gen_trial_matrix_summary(trialtypes=None,sessions=None):
-  a = annotate_trials(r"F:\CuratedSessions", filename=r"F:\CuratedSessions\all.trialtypes.pickle")
-  out = a.by_type_session()
-
-  if trialtypes is None:
-    trialtypes = list(out.keys())
-  if sessions is None:
-    sessions = list(out.values())[0].keys()
-
-  def gen_trials():
-    for t in trialtypes:
-      for s in sessions:
-        for e in out.get(str(t),{}).get(s,[]):
-          yield e
-
-  def count_trials():
-    return len(list(gen_trials()))
-
-  def get_n_timepoints():
-    table = traj.MeasurementsTable(
-        list(seq2measurements([list(a.data.keys())[0]]))[0] ) # -_-;
-    data = table.asarray()
-    return data[:,1].max() + 10 # add a fudge factor
-
-  ntrials = count_trials()
-  ntime   = get_n_timepoints()
-  nfeat   = 4 # average angle, angle spread, projected mean follicle position,
-              # projected follicle position spread
-  index = zeros((ntrials,2),dtype=uint8)
-  im = nan*zeros((nfeat,ntrials,ntime))
-
-  session_index = {}
-  for i,k in enumerate(list(out.values())[0].iterkeys()):
-    session_index[k] = i
-
-  def gen_trial_index():
-    for t in trialtypes:
-      for s in sessions:
-        for e in out.get(str(t),{}).get(s,[]):
-          yield int(t),session_index[s]
-
-  row = 0;
-  for i,(filename,code) in enumerate(zip(seq2measurements(gen_trials()),gen_trial_index())):
-    print("[%5d of %5d] %s"%(i,ntrials,filename))
-    try:
-      data = traj.MeasurementsTable(filename).asarray();
-      index[row,:] = code
-      nwhiskers = max(data[:,0].astype(int))+1
-      count   = zeros((nwhiskers,ntime))
-      working = zeros((nwhiskers,ntime))
-      mask = data[:,0]>=0
-      count[data[mask,0].astype(int),data[mask,1].astype(int)] = 1 # [whisker,time] = 1
-      #angles
-      for iwhisker in range(nwhiskers):
-        mask = data[:,0]==iwhisker
-        working[iwhisker,data[mask,1].astype(int)] = data[mask,5]
-      #mean angle
-      im[0,row,:] = working.sum(0)/count.sum(0)
-      #angle spread
-      im[1,row,:] = working.ptp(0)
-
-      #follicle position
-      #For leo's data, just use the xposition (column 7)
-      for iwhisker in range(nwhiskers):
-        mask = data[:,0]==iwhisker
-        working[iwhisker,data[mask,1].astype(int)] = data[mask,7]
-      #mean follicle
-      im[2,row,:] = working.sum(0)/count.sum(0)
-      #angle follcile
-      im[3,row,:] = working.ptp(0)
-      row += 1
-
-    except IOError:
-      pass
-  return index,im
+    a = annotate_trials(r"F:\CuratedSessions", filename=r"F:\CuratedSessions\all.trialtypes.pickle")
+    out = a.by_type_session()
+    # do 3 whiskers
+    for i in range(3):
+        f = lambda k: gen_trial_matrix(
+            list(seq2measurements(list(out[str(k)].values())[isession])), i, 5)
+        figure()
+        for j in range(1, 6):
+            subplot(5, 1, j)
+            trials = f(j)
+            trials[isnan(trials)] = trials[~isnan(trials)].mean()
+            acc = None
+            for row in trials:
+                pxx, freqs, bins, im = specgram(row, Fs=1000, interpolation='nearest', NFFT=128, noverlap=64,
+                                                scale_by_freq=1, hold=0)
+                if acc is None:
+                    acc = log(pxx)
+                else:
+                    acc += log(pxx)
+            acc /= float(len(trials))
+            cla()
+            imshow(acc, interpolation='nearest')
+            axis("tight")
 
 
-def render_angle_spread_over_time(outdir,index,im,isession=0,itrials=[1,2,3,4,5],dt=50,every=10):
-  """index,im should be returned from gen_trial_matrix_summary"""
-  figure()
-  colors = ['r','c','g','b','k']
-  for i,itime in enumerate(range(0,im.shape[2]-dt,every)):
-    clf()
-    for t in reversed(itrials):
-      mask = (index[:,0]==t)*(index[:,1]==isession)      
-      plot(im[0,mask,itime:(itime+dt)].ravel(),
-           im[1,mask,itime:(itime+dt)].ravel(),
-           '.',markersize=2,color=colors[t-1],alpha=0.5)
-    title("%5d"%itime)
-    axis([-150,-20,0,90])
-    grid("on")
-    show()
-    savefig("%s/%04d.png"%(outdir,i),dpi=96,facecolor=(1,1,1))
+def gen_trial_matrix_summary(trialtypes=None, sessions=None):
+    a = annotate_trials(r"F:\CuratedSessions", filename=r"F:\CuratedSessions\all.trialtypes.pickle")
+    out = a.by_type_session()
 
+    if trialtypes is None:
+        trialtypes = list(out.keys())
+    if sessions is None:
+        sessions = list(out.values())[0].keys()
 
-def gen_trial_matrix_all_whiskers(n_whiskers=3,ifeatures=[5,6]):
-  a = annotate_trials(r"F:\CuratedSessions", filename=r"F:\CuratedSessions\all.trialtypes.pickle")
-  out = a.by_type_session()
-  n_trials = len(a.data)
-  n_trial_type = len(list(out.keys()))
-  n_sessions = len(list(out.values())[0].keys())
+    def gen_trials():
+        for t in trialtypes:
+            for s in sessions:
+                for e in out.get(str(t), {}).get(s, []):
+                    yield e
 
-  def get_n_timepoints():
-    table = traj.MeasurementsTable(
-        list(seq2measurements([list(a.data.keys())[0]]))[0] ) # -_-;
-    data = table.asarray()
-    return data[:,1].max() + 10 # add a fudge factor
+    def count_trials():
+        return len(list(gen_trials()))
 
-  # each row: trial type id, session id, whisker id
-  index = zeros((n_trials*n_whiskers,3),dtype=uint8) 
-  im = nan*zeros((len(ifeatures),n_trials*n_whiskers,get_n_timepoints()))
+    def get_n_timepoints():
+        table = traj.MeasurementsTable(
+            list(seq2measurements([list(a.data.keys())[0]]))[0])  # -_- 
+        data = table.asarray()
+        return data[:, 1].max() + 10  # add a fudge factor
 
-  session_index = {}
-  for i,k in enumerate(list(out.values())[0].iterkeys()):
-    session_index[k] = i
+    ntrials = count_trials()
+    ntime = get_n_timepoints()
+    nfeat = 4  # average angle, angle spread, projected mean follicle position,
+    # projected follicle position spread
+    index = zeros((ntrials, 2), dtype=uint8)
+    im = nan * zeros((nfeat, ntrials, ntime))
 
-  row = 0
-  for kTrialType,vTrialType in out.items():
-    for kSession,vSession in vTrialType.items():
-      for filename in seq2measurements(vSession):
-        print("[%5d of %5d] %s"%(row,im.shape[1],filename))
+    session_index = {}
+    for i, k in enumerate(list(out.values())[0].iterkeys()):
+        session_index[k] = i
+
+    def gen_trial_index():
+        for t in trialtypes:
+            for s in sessions:
+                for e in out.get(str(t), {}).get(s, []):
+                    yield int(t), session_index[s]
+
+    row = 0
+    for i, (filename, code) in enumerate(zip(seq2measurements(gen_trials()), gen_trial_index())):
+        print("[%5d of %5d] %s" % (i, ntrials, filename))
         try:
-          data = traj.MeasurementsTable(filename).asarray();
-          for iWhisker in range(n_whiskers):
-            index[row,:] = [int(kTrialType), session_index[kSession], iWhisker]
-            mask = data[:,0] == iWhisker;
-            for i,ifeat in enumerate(ifeatures):
-              im[i,row,data[mask,1].astype(uint32)] = data[mask,ifeat]
-            row += 1
-        except IOError:
-          pass
+            data = traj.MeasurementsTable(filename).asarray()
+            index[row, :] = code
+            nwhiskers = max(data[:, 0].astype(int)) + 1
+            count = zeros((nwhiskers, ntime))
+            working = zeros((nwhiskers, ntime))
+            mask = data[:, 0] >= 0
+            count[data[mask, 0].astype(int), data[mask, 1].astype(int)] = 1  # [whisker,time] = 1
+            # angles
+            for iwhisker in range(nwhiskers):
+                mask = data[:, 0] == iwhisker
+                working[iwhisker, data[mask, 1].astype(int)] = data[mask, 5]
+            # mean angle
+            im[0, row, :] = working.sum(0) / count.sum(0)
+            # angle spread
+            im[1, row, :] = working.ptp(0)
 
-  return index,im
+            # follicle position
+            # For leo's data, just use the xposition (column 7)
+            for iwhisker in range(nwhiskers):
+                mask = data[:, 0] == iwhisker
+                working[iwhisker, data[mask, 1].astype(int)] = data[mask, 7]
+            # mean follicle
+            im[2, row, :] = working.sum(0) / count.sum(0)
+            # angle follcile
+            im[3, row, :] = working.ptp(0)
+            row += 1
+
+        except IOError:
+            pass
+    return index, im
+
+
+def render_angle_spread_over_time(outdir, index, im, isession=0, itrials=None, dt=50, every=10):
+    """index,im should be returned from gen_trial_matrix_summary"""
+    if itrials is None:
+      itrials = [1, 2, 3, 4, 5]
+    figure()
+    colors = ['r', 'c', 'g', 'b', 'k']
+    for i, itime in enumerate(range(0, im.shape[2] - dt, every)):
+        clf()
+        for t in reversed(itrials):
+            mask = (index[:, 0] == t) * (index[:, 1] == isession)
+            plot(im[0, mask, itime:(itime + dt)].ravel(),
+                 im[1, mask, itime:(itime + dt)].ravel(),
+                 '.', markersize=2, color=colors[t - 1], alpha=0.5)
+        title("%5d" % itime)
+        axis([-150, -20, 0, 90])
+        grid("on")
+        show()
+        savefig("%s/%04d.png" % (outdir, i), dpi=96, facecolor=(1, 1, 1))
+
+
+def gen_trial_matrix_all_whiskers(n_whiskers=3, ifeatures=None):
+    if ifeatures is None:
+      ifeatures = [5, 6]
+    a = annotate_trials(r"F:\CuratedSessions", filename=r"F:\CuratedSessions\all.trialtypes.pickle")
+    out = a.by_type_session()
+    n_trials = len(a.data)
+    n_trial_type = len(list(out.keys()))
+    n_sessions = len(list(out.values())[0].keys())
+
+    def get_n_timepoints():
+        table = traj.MeasurementsTable(
+            list(seq2measurements([list(a.data.keys())[0]]))[0])  # -_- 
+        data = table.asarray()
+        return data[:, 1].max() + 10  # add a fudge factor
+
+    # each row: trial type id, session id, whisker id
+    index = zeros((n_trials * n_whiskers, 3), dtype=uint8)
+    im = nan * zeros((len(ifeatures), n_trials * n_whiskers, get_n_timepoints()))
+
+    session_index = {}
+    for i, k in enumerate(list(out.values())[0].iterkeys()):
+        session_index[k] = i
+
+    row = 0
+    for kTrialType, vTrialType in out.items():
+        for kSession, vSession in vTrialType.items():
+            for filename in seq2measurements(vSession):
+                print("[%5d of %5d] %s" % (row, im.shape[1], filename))
+                try:
+                    data = traj.MeasurementsTable(filename).asarray()
+                    for iWhisker in range(n_whiskers):
+                        index[row, :] = [int(kTrialType), session_index[kSession], iWhisker]
+                        mask = data[:, 0] == iWhisker
+                        for i, ifeat in enumerate(ifeatures):
+                            im[i, row, data[mask, 1].astype(uint32)] = data[mask, ifeat]
+                        row += 1
+                except IOError:
+                    pass
+
+    return index, im

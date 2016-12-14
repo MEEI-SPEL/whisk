@@ -33,24 +33,20 @@ Date: 2009-05-26
 Copyright (c) 2009 HHMI. Free downloads and distribution are allowed as long as proper
 credit is given to the author.  All other rights reserved.
 """
-from numpy import *
-import numpy
 
 if __name__ == '__main__':
     import matplotlib
 
     matplotlib.use('Agg')
-from pylab import *
-from features import *
-import os
-import pdb
-import warnings
 from warnings import warn
+
+from .features import *
+from pylab import *
 
 
 def load(moviename, whiskersname):
-    from ui.whiskerdata import load_whiskers, load_trajectories
-    from ui.genetiff import Reader
+    from python.ui.whiskerdata import load_whiskers
+    from python.ui import Reader
     movie = Reader(moviename, adjuststipple=1)
     w, wid = load_whiskers(whiskersname)
     return w, movie
@@ -676,7 +672,7 @@ def render_summary_to_file(whiskername, figurename):
 
 if 1:
     import optparse
-    from traj import MeasurementsTable
+    from .traj import MeasurementsTable
 
     if __name__ == '__main__':
         parser = optparse.OptionParser(usage="Usage: %prog [options] source dest")
