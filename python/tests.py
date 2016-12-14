@@ -71,21 +71,21 @@ def whisker_cmp(a,b):
   return cmp( a.y[0], b.y[0] )
 
 def wvdsort(wvd):
-  return sorted( wvd.values(), whisker_cmp )
+  return sorted( list(wvd.values()), whisker_cmp )
 
 def wvdsort_get_keys(wvd):
-  return [x[0] for x in sorted(wvd.items(), cmp=whisker_cmp, key = lambda x:x[-1]) ]
+  return [x[0] for x in sorted(list(wvd.items()), cmp=whisker_cmp, key = lambda x:x[-1]) ]
 
 def plot_whiskers( wv, *args, **kwargs ):
   #xform = lambda a: 2*((a/2).round().astype(int))
   texcludes = ['marker','linestyle','markersize','linewidth']
   tkwargs = {} #'backgroundcolor':'w'}
-  for k,v in kwargs.iteritems():
+  for k,v in kwargs.items():
     if not k in texcludes:
       tkwargs[k] = v
   g = (el for el in enumerate(wv)) #default generator
   if hasattr(wv,'iteritems'):
-    g = (el for el in wv.iteritems())
+    g = (el for el in wv.items())
   else:
     g = ( (hex(id(e)),e) for e in wv )
 
@@ -337,7 +337,7 @@ class ModelingTrajectoryBuilder( MergeModelBuilder ):
   def compile(self):
     t = {}
     for tid, sequence in enumerate(self._models):
-      if not tid in t.keys():
+      if not tid in list(t.keys()):
         t[tid] = {}
       for fid,wid in sequence:
         if not fid in t[tid]:
@@ -353,7 +353,7 @@ def demo_builders( whiskers, frames ):
   mb = ModelBuilder( whiskers[frames[0]] )
   tb = TrajectoryBuilder( whiskers, frames[0] )
   for f in frames[1:]:
-    print f
+    print(f)
     m = mb.align( whiskers[f] )
     mb.update(whiskers[f], m)
     tb.update(f, m)

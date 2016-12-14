@@ -23,7 +23,7 @@ def load():
   return w,t,movie
 
 def group(w,t):
-  return [ [ w[fid][sid] for fid,sid in e.iteritems() ] for e in t.itervalues() ]
+  return [ [ w[fid][sid] for fid,sid in e.items() ] for e in t.values() ]
 
 def label(g):
   def _iter():

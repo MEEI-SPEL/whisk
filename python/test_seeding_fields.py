@@ -15,6 +15,7 @@ import pdb
 #
 from ui.genetiff import Reader
 from trace import *
+from functools import reduce
 #movie = Reader('../../data/S0.tif',adjuststipple=1)
 #movie = Reader('../../data/seq/whisker_data_0140.seq',adjuststipple=1)
 movie = Reader('../../data/JF8410_041808_001.tif',adjuststipple=1)
@@ -39,7 +40,7 @@ def draw_poly( image, xy, color ):
   edges.append( ((xy[-1][0],xy[0][0]), (xy[-1][1],xy[0][1])) )
   runs = {}
   for e in edges:
-    yrange = range( floor(min(e[1])), ceil(max(e[1])+1 ))
+    yrange = list(range( floor(min(e[1])), ceil(max(e[1])+1 )))
     n = float(len(yrange))
     for i,y in enumerate( yrange ):
       if y < 0 or y >= image.shape[0]:
@@ -54,12 +55,12 @@ def draw_poly( image, xy, color ):
         r.append( x )
         runs[y] = [min(r), max(r)]
   #sanitize
-  for y,(x0,x1) in runs.iteritems():
+  for y,(x0,x1) in runs.items():
     x0 = max(0,x0)
     x1 = min( image.shape[1], x1 ) 
     runs[y] = (x0,x1)
   #render
-  for y,(x0,x1) in runs.iteritems():
+  for y,(x0,x1) in runs.items():
     image[y][ int(x0):int(x1) ] = color
 
 def trace_from_fields( image ):
@@ -76,7 +77,7 @@ def trace_from_fields( image ):
     if mask[s[1],s[0]]==1:
       #plot( [s[0]],[s[1]],'r.' )
       #axis("image")
-      sd = cSeed(*map(int,s) )
+      sd = cSeed(*list(map(int,s)) )
       #print sd #, h[s[1],s[0]], st[s[1],s[0]]
       count += 1
       w = trace.Trace_Whisker( sd , image )
@@ -93,7 +94,7 @@ def trace_from_fields( image ):
 def trace_movie_from_fields( movie ):
   w = {}
   for i,im in enumerate(movie):
-    print "Frame %5d of %5d"%(i, len(movie))
+    print("Frame %5d of %5d"%(i, len(movie)))
     w[i] = dict([p for p in  enumerate(trace_from_fields( im )) ])
   return w
 
@@ -122,7 +123,7 @@ def plotfields(im):
   imshow(s,cmap=cm.spectral,vmin=s.max()*0.9)
   colorbar()
 
-def plot_fields_multimax(im, maxr = xrange(4,8,2) ):
+def plot_fields_multimax(im, maxr = range(4,8,2) ):
   figure()
   subplots_adjust( 0, 0, 1, 1, 0.05, 0.05 )
   for idx, r in enumerate(maxr):
@@ -145,7 +146,7 @@ def plot_fields_multimax(im, maxr = xrange(4,8,2) ):
 
 def _impyramid( im ):
   evener = lambda x: x - x%2
-  R,C = map(evener, im.shape)
+  R,C = list(map(evener, im.shape))
   a = im[ :R:2,  :C:2]/4;
   b = im[ :R:2, 1:C:2]/4;
   c = im[1:R:2,  :C:2]/4;
@@ -161,7 +162,7 @@ pyramid  = lambda im, n: reduce( rcompose, (im,) + n*(_impyramid,) )
 def eg():
   figure()
   subplots_adjust( 0, 0, 1, 1, 0.05, 0.05 )
-  for i in xrange(4):
+  for i in range(4):
     subplot(1,4,i+1)
     imshow( pyramid(im, i ), cmap=cm.gray )
     axis('off')
@@ -169,7 +170,7 @@ def eg():
 #
 # MULTIRESOLUTION FIELDS
 #
-def plot_fields_multiresolution( im, levels = range(3), maxr = 16  ):
+def plot_fields_multiresolution( im, levels = list(range(3)), maxr = 16  ):
   figure()
   subplots_adjust( 0, 0, 1, 1, 0.05, 0.05 )
   for idx, i in enumerate(levels):

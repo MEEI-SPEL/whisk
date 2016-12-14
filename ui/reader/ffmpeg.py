@@ -11,7 +11,7 @@ from ctypes import *
 from ctypes.util import find_library
 import numpy
 from numpy import zeros
-from reader import StackReader
+from .reader import StackReader
 import os,sys
 
 dllpath = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0]
@@ -47,13 +47,13 @@ _bpp = {  1   :   numpy.uint8,
 def readstack( filename ):
   width, height, depth, kind = c_int(0),c_int(0),c_int(0),c_int(0)
   if not os.path.exists(filename):
-    raise IOError, "File not found. (%s)"%filename 
+    raise IOError("File not found. (%s)"%filename) 
   if(not cReader.FFMPEG_Get_Stack_Dimensions( filename,
                                               byref(width),
                                               byref(height),
                                               byref(depth),
                                               byref(kind) )):
-    raise IOError, "Couldn't read dimensions for %s"%filename
+    raise IOError("Couldn't read dimensions for %s"%filename)
   stack = zeros( (depth.value, height.value, width.value), dtype = _bpp[kind.value] )
   cReader.FFMPEG_Read_Stack_Into_Buffer( filename, 
                                          stack.ctypes.data_as( POINTER(c_uint8) ))

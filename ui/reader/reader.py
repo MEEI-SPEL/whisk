@@ -51,7 +51,7 @@ class IMovieReader(object):
   def rewind(self):
     self.current_frame_id = 0
     return self
-  def next(self):
+  def __next__(self):
     if self.current_frame_id >= len(self):
       raise StopIteration
     self.current_frame_id += 1
@@ -114,7 +114,7 @@ class AdjustStippledGainReader( IMovieReader ):
     mask = im > im.mean()
     
     evener = lambda x: x - x%2 #makes the dimensions even by truncating the last line if necessary
-    xd,yd = map(evener, im.shape)
+    xd,yd = list(map(evener, im.shape))
     hratio = im[:xd:2]/im[1:xd:2]                     # compute ratio of odd and even lines
     hmask  = mask[:xd:2]                              # ...consider only those pixels above the mean
     hgain  = hratio[hmask].mean()                     # compute the correction factor

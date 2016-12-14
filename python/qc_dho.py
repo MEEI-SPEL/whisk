@@ -14,6 +14,7 @@ from numpy import *
 from pylab import *
 import pdb
 import os
+from functools import reduce
 
 #ROOT = r"H:\DOM3" 
 ROOT = r"I:\data\DHO"
@@ -56,7 +57,7 @@ def backup_measurements(root,backupname):
   N = len(list(gen_names(root)))
   for i,e in enumerate(gen_names(root)):
     d = os.path.join(broot,subroot(root,e))
-    print "[%6d of %6d] %s"%(i,N,d)
+    print("[%6d of %6d] %s"%(i,N,d))
     ensure(d)
     shutil.copy( e,d )
 
@@ -116,13 +117,13 @@ def aspattern(anm,date,root,tid,ext):
 def gen_trials_w_keys(meta,anm=None,date=None,must_exist=True):
   import os
   if anm is None:
-    for anm in meta.iterkeys():
+    for anm in meta.keys():
       for v in gen_trials_w_keys(meta,anm,None):
         yield v
   else:
     anm = anm.upper()
     if date is None:
-      for date in (x for x in meta.get(anm,{}).iterkeys() if type(x) is datetime.date):
+      for date in (x for x in meta.get(anm,{}).keys() if type(x) is datetime.date):
         for v in gen_trials_w_keys(meta,anm,date):
           yield v
     else:
@@ -154,14 +155,14 @@ def fix_filenames(meta,anm=None,date=None,fakeit=True):
       files = glob.glob(pattern)
       if len(files)!=1: # handle them errors, bro
         if len(files)==0:
-          print "Could not find candidate for missing file: "+fname
+          print("Could not find candidate for missing file: "+fname)
         else:
-          print "Multiple candidates found for missing file: "+fname
+          print("Multiple candidates found for missing file: "+fname)
           for f in files:
-            print "\t"+f
+            print("\t"+f)
         continue
       # done handling errors, get some buisness done
-      print "Move %s to %s"%(files[0],fname)
+      print("Move %s to %s"%(files[0],fname))
       if not fakeit:
         shutil.move(files[0],fname)
 
@@ -170,11 +171,11 @@ def fix_filenames(meta,anm=None,date=None,fakeit=True):
 
 
 def head(g):
-  return g.next()
+  return next(g)
 
 def countof_frames(fname):
   v = traj.MeasurementsTable(fname).asarray()[:,1].max() 
-  print fname, v
+  print(fname, v)
   return int(v)
 
 def update_meta(meta):
@@ -241,7 +242,7 @@ def build_histograms(fname,min_ms,max_ms,norm=True,dth_deg=2.5):
   nwhiskers = int(data[:,0].max())+1
   nframes   = int(data[:,1].max())+1
   angles    = nan*zeros((nframes,nwhiskers)) 
-  for i in xrange(nwhiskers):
+  for i in range(nwhiskers):
     mask = (data[:,0]==i)*tmask
     angles[data[mask,1].astype(int),i] = awrap(data[mask,5])
   dth = diff(angles,axis=1).mean(axis=1)
@@ -268,7 +269,7 @@ def hist_matrix(meta,anm,date,min_ms=0,max_ms=2000,key='angle',norm=True,dth_deg
   return m[~isnan(m).all(axis=1),:] #filter out trials with unknown frame rate
 
 def plot_hist_matrix_means(meta,**kwargs):
-  for anm in meta.keys():
+  for anm in list(meta.keys()):
     try:
       figure()
       days = sorted([str(d) for d in meta[anm.upper()] if type(d) is datetime.date])
@@ -281,7 +282,7 @@ def plot_hist_matrix_means(meta,**kwargs):
       pass
 
 def plot_hist_matrix_ptps(meta,**kwargs):
-  for anm in meta.keys():
+  for anm in list(meta.keys()):
     try:
       figure()
       days = sorted([str(d) for d in meta[anm.upper()] if type(d) is datetime.date])
@@ -294,15 +295,15 @@ def plot_hist_matrix_ptps(meta,**kwargs):
       pass
 
 def plot_hist_matrix_over_time(meta,anm,day,from_ms,to_ms,every_ms,**kwargs):
-  ncols = len(range(from_ms,to_ms,every_ms))
+  ncols = len(list(range(from_ms,to_ms,every_ms)))
   kwargs['min_ms'] = from_ms
   kwargs['max_ms'] = from_ms+every_ms
-  tmp = hist_matrix(meta,meta.keys()[0],None,**kwargs)
+  tmp = hist_matrix(meta,list(meta.keys())[0],None,**kwargs)
   nrows = tmp.shape[1]
   out = nan*zeros((nrows,ncols)) #cols are time, rows are feature, value is density
 
   figure()
-  for i,t in enumerate(xrange(from_ms,to_ms,every_ms)):
+  for i,t in enumerate(range(from_ms,to_ms,every_ms)):
     kwargs['min_ms'] = t
     kwargs['max_ms'] = t+every_ms
     tmp = hist_matrix(meta,anm,day,**kwargs)
@@ -317,45 +318,45 @@ def plot_hist_matrix_over_time(meta,anm,day,from_ms,to_ms,every_ms,**kwargs):
 
 def all_anm_hist_matrix_over_time(meta,from_ms,to_ms,every_ms,**kwargs):
   results = {}
-  for anm in meta.keys():
-    print anm
-    ncols = len(range(from_ms,to_ms,every_ms))
+  for anm in list(meta.keys()):
+    print(anm)
+    ncols = len(list(range(from_ms,to_ms,every_ms)))
     kwargs['min_ms'] = from_ms
     kwargs['max_ms'] = from_ms+every_ms
-    tmp = hist_matrix(meta,meta.keys()[0],None,**kwargs)
+    tmp = hist_matrix(meta,list(meta.keys())[0],None,**kwargs)
     nrows = tmp.shape[1]    
     
     hists = {}
-    for day in [k for k in meta[anm].keys() if type(k) is datetime.date]:
-      print day,
+    for day in [k for k in list(meta[anm].keys()) if type(k) is datetime.date]:
+      print(day, end=' ')
       try:
         out = nan*zeros((nrows,ncols)) #cols are time, rows are feature, value is density
-        for i,t in enumerate(xrange(from_ms,to_ms,every_ms)):
-          print '.',
+        for i,t in enumerate(range(from_ms,to_ms,every_ms)):
+          print('.', end=' ')
           kwargs['min_ms'] = t
           kwargs['max_ms'] = t+every_ms
           tmp = hist_matrix(meta,anm,day,**kwargs)
           out[:,i] = tmp.mean(axis=0)
         hists[day] = out
       except:
-        print 'x',
+        print('x', end=' ')
         pass
       finally:
-        print 'Done'
+        print('Done')
     results[anm] = hists
   return results
 
 
 def plot_hist_matrix_ptps_over_time(meta,anm,day,from_ms,to_ms,every_ms,**kwargs):
-  ncols = len(range(from_ms,to_ms,every_ms))
+  ncols = len(list(range(from_ms,to_ms,every_ms)))
   kwargs['min_ms'] = from_ms
   kwargs['max_ms'] = from_ms+every_ms
-  tmp = hist_matrix(meta,meta.keys()[0],None,**kwargs)
+  tmp = hist_matrix(meta,list(meta.keys())[0],None,**kwargs)
   nrows = tmp.shape[1]
   out = nan*zeros((nrows,ncols)) #cols are time, rows are feature, value is density
 
   figure()
-  for i,t in enumerate(xrange(from_ms,to_ms,every_ms)):
+  for i,t in enumerate(range(from_ms,to_ms,every_ms)):
     kwargs['min_ms'] = t
     kwargs['max_ms'] = t+every_ms
     tmp = hist_matrix(meta,anm,day,**kwargs)
@@ -369,17 +370,17 @@ def plot_hist_matrix_ptps_over_time(meta,anm,day,from_ms,to_ms,every_ms,**kwargs
   return out
 
 def plot_mean_deflection_over_time(meta,anm,from_ms,to_ms,every_ms,**kwargs):
-  ncols = len(range(from_ms,to_ms,every_ms))
+  ncols = len(list(range(from_ms,to_ms,every_ms)))
   kwargs['min_ms'] = from_ms
   kwargs['max_ms'] = from_ms+every_ms
-  tmp = hist_matrix(meta,meta.keys()[0],None,**kwargs)
+  tmp = hist_matrix(meta,list(meta.keys())[0],None,**kwargs)
   nrows = tmp.shape[1]
   out = nan*zeros((nrows,ncols)) #cols are time, rows are feature, value is density
   
   figure()
   means = {}
-  for day in [k for k in meta[anm].keys() if type(k) is datetime.date]:
-    for i,t in enumerate(xrange(from_ms,to_ms,every_ms)):
+  for day in [k for k in list(meta[anm].keys()) if type(k) is datetime.date]:
+    for i,t in enumerate(range(from_ms,to_ms,every_ms)):
       kwargs['min_ms'] = t
       kwargs['max_ms'] = t+every_ms
       tmp = hist_matrix(meta,anm,day,**kwargs)
@@ -391,21 +392,21 @@ def plot_mean_deflection_over_time(meta,anm,from_ms,to_ms,every_ms,**kwargs):
 
 def all_anm_mean_deflection_over_time(meta,from_ms,to_ms,every_ms,**kwargs):
   results = {}
-  for anm in meta.keys():
-    print anm
-    ncols = len(range(from_ms,to_ms,every_ms))
+  for anm in list(meta.keys()):
+    print(anm)
+    ncols = len(list(range(from_ms,to_ms,every_ms)))
     kwargs['min_ms'] = from_ms
     kwargs['max_ms'] = from_ms+every_ms
-    tmp = hist_matrix(meta,meta.keys()[0],None,**kwargs)
+    tmp = hist_matrix(meta,list(meta.keys())[0],None,**kwargs)
     nrows = tmp.shape[1]
     out = nan*zeros((nrows,ncols)) #cols are time, rows are feature, value is density
           
     means = {}
-    for day in [k for k in meta[anm].keys() if type(k) is datetime.date]:
-      print day,
+    for day in [k for k in list(meta[anm].keys()) if type(k) is datetime.date]:
+      print(day, end=' ')
       try:
-        for i,t in enumerate(xrange(from_ms,to_ms,every_ms)):
-          print '.',
+        for i,t in enumerate(range(from_ms,to_ms,every_ms)):
+          print('.', end=' ')
           kwargs['min_ms'] = t
           kwargs['max_ms'] = t+every_ms
           tmp = hist_matrix(meta,anm,day,**kwargs)          
@@ -415,15 +416,15 @@ def all_anm_mean_deflection_over_time(meta,from_ms,to_ms,every_ms,**kwargs):
       except:                
         pass
       finally:
-        print 'Done'      
+        print('Done')      
     results[anm] = means
   return results
 
 
 def rates(meta):
   out = {}
-  for anm in meta.iterkeys():
-    days = sorted([d for d in meta[anm].keys() if type(d) is datetime.date])
+  for anm in meta.keys():
+    days = sorted([d for d in list(meta[anm].keys()) if type(d) is datetime.date])
     counts = zeros((len(days),4))  #there are four types: (1)Hit, (2)Miss, (3)FA, (4)CR
     for iday,day in enumerate(days):
       for t in meta[anm][day]['trials']:
@@ -445,7 +446,7 @@ def itertrials(meta):
 
 def iteridents(table_array):
   idents = table_array[:,COL_IDENT].astype(int)
-  for i in xrange(idents.min(),idents.max()+1):
+  for i in range(idents.min(),idents.max()+1):
     if i==-1:
       continue
     yield table_array[idents==i,:]
@@ -470,11 +471,11 @@ def queries(meta):
   argmax = {'delta_angle':'','delta_curvature':''}
 
   for name,table in itertrials(meta):
-    print name    
+    print(name)    
     for trajectory in iteridents(table):
       ts  = times(trajectory)[1:]
       dts = delta_times(trajectory)
-      for kind in fns.iterkeys():
+      for kind in fns.keys():
         d = fns[kind](trajectory)/dts
         if d.size:
           v = d.max()

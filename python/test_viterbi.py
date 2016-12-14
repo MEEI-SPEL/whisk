@@ -51,6 +51,6 @@ expected = 2.5754047e-5;
 
 from trace import viterbi_log2
 t,p,labels = viterbi_log2( sequence, log2(sprob), log2(tprob), log2(eprob), do_checks = True )
-print 2**t,2**p
+print(2**t,2**p)
 for e in labels:
-  print states[e]
+  print(states[e])

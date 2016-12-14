@@ -26,11 +26,11 @@ class LastOnlyScheduler(Thread):
         self._executed += 1 
     except:
       title = '---'+str(self.__class__())+100*'-' 
-      print
-      print title[:80]
+      print()
+      print(title[:80])
       traceback.print_exc(file=sys.stderr)
-      print 80*'-'
-      print
+      print(80*'-')
+      print()
 
   def pushjob( self, job ):
     self._waiting_job = job
@@ -57,30 +57,30 @@ class TestLastOnlyScheduler(unittest.TestCase):
   def testLastOnlySchedulerAddOne(self):
     def f(name, x):
       for el in x:
-        print '%s: %d'%(name, el)
+        print('%s: %d'%(name, el))
 
-    self.scheduler.pushjob( lambda: f('test add one job', range(10) ) )
+    self.scheduler.pushjob( lambda: f('test add one job', list(range(10)) ) )
   
   def testLastOnlySchedulerAddTen(self):
     def f(name, x):
       for el in x:
-        print '%s: %d'%(name, el)
+        print('%s: %d'%(name, el))
         time.sleep(0.1)
 
     for i in range(10):
-      self.scheduler.pushjob( lambda: f('job (%d)'%i, range(10) ) )
+      self.scheduler.pushjob( lambda: f('job (%d)'%i, list(range(10)) ) )
       time.sleep(0.1)
 
   def testLastOnlySchedulerExceptionHandling(self):
     def f(name, x):
       for el in x:
-        print '%s: %d'%(name, el)
+        print('%s: %d'%(name, el))
         if (el+1)%5 == 0:
           raise Exception
         time.sleep(0.1)
     for i in range(10):
       self.scheduler.pushjob( 
-        lambda: f('testLastOnlySchedulerExceptionHandling  (%d)'%i, range(10) ) 
+        lambda: f('testLastOnlySchedulerExceptionHandling  (%d)'%i, list(range(10)) ) 
         )
       time.sleep(0.1)
 

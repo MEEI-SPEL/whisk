@@ -26,10 +26,10 @@ def training_set_fraction(table):
       lengths[r[1]] = f
     return lengths
   length,estn = table.est_length_threshold();
-  count = lambda v: sum(map(lambda x: x>length,v))
+  count = lambda v: sum([x>length for x in v])
   isok = lambda v: count(v)==estn
   lengths = frame_by_length(table)
-  nok = sum(map(isok,lengths.values()))
+  nok = sum(map(isok,list(lengths.values())))
   return nok/float(len(lengths))
 
 def proc(root):
@@ -53,7 +53,7 @@ def proc(root):
   for i,n in enumerate(gen_names(root)):
     if 1: #i < 5:
       try:
-        print "[%5d of %5d] %s"%(i,filecount,n)
+        print("[%5d of %5d] %s"%(i,filecount,n))
         table = traj.MeasurementsTable(n)
         recall += heuristic_recall(table)
         precision += heuristic_precision(table)

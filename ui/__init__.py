@@ -1,1 +1,1 @@
-from ui2 import *
+from .ui2 import *

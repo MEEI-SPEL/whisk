@@ -9,6 +9,7 @@ to the author. All other rights reserved.
 from numpy import zeros, hypot
 from trace import Whisker_Seg
 import pdb
+from functools import reduce
 
 def load():
   from ui.whiskerdata import load_whiskers, load_trajectories
@@ -23,22 +24,22 @@ def load():
   return w,movie
 
 def merge_all( whiskers, shape, scale = 2 ):
-  for fid,wvd in whiskers.iteritems():
-    print fid
+  for fid,wvd in whiskers.items():
+    print(fid)
     wv = merge_frame( wvd, shape, scale ).whiskers()
     wvd.clear()
     wvd.update( [ e for e in enumerate(wv) ] )
 
 def merge_frame( wvd, shape, scale = 2 ):
   table = CollisionTable( wvd, shape, scale )
-  r     = Resolution(wvd.values())
+  r     = Resolution(list(wvd.values()))
   #r     = Resolution()
   
-  m = table.next()
+  m = next(table)
   while m:
     o = r.add(m, lambda e: len(e)<5 )
     table.update(o)
-    m = table.next()
+    m = next(table)
 
   return r
 
@@ -47,9 +48,11 @@ def breakout( w, bnd ):
   middle,right = rest.split(bnd[1]-bnd[0])
   return left, middle, right
 
-def trace_overlap( (wa,i), (wb,j), thresh = 2.0 ):
+def trace_overlap(xxx_todo_changeme, xxx_todo_changeme1, thresh = 2.0 ):
   # assumes that indexes run along same direction (i.e. x is monitonically
   # increasing along index )
+  (wa,i) = xxx_todo_changeme
+  (wb,j) = xxx_todo_changeme1
   def dist(ia,ib):
     a,b = wa[ia], wb[ib]
     return hypot( a[0] - b[0], a[1] - b[1] )
@@ -315,18 +318,18 @@ class CollisionTable(object):
     self._build_inverse_table( wvd )
   
   def _build_inverse_table(self,  wvd ):
-    hash = lambda w: enumerate( map(self.topx,zip(w.x,w.y)) )
+    hash = lambda w: enumerate( map(self.topx,list(zip(w.x,w.y))) )
     g = enumerate(wvd)
     if isinstance(wvd, dict):
-      g = wvd.iteritems()
-    for i,w in wvd.iteritems():
+      g = iter(wvd.items())
+    for i,w in wvd.items():
       for j,idx in hash(w):
         self._map.setdefault(idx,set()).add((w,j))
 
   def update( self, changes ):
     """ Changes is a dict mapping old whisker segments to new segments """
     last = None
-    for w,p in changes.iteritems():
+    for w,p in changes.items():
       self.remove(w)
       if p:
         self.add(p[0]) # add back ends
@@ -337,19 +340,19 @@ class CollisionTable(object):
 
   def add(self, w):
     if not w: return
-    hash = lambda e: enumerate( map(self.topx,zip(e.x,e.y)) )
+    hash = lambda e: enumerate( map(self.topx,list(zip(e.x,e.y))) )
     for i,px in hash(w):
       self._map.setdefault(px,set()).add( (w,i) )
 
   def remove(self, w):
     if not w: return
-    hash = lambda e: enumerate( map(self.topx,zip(e.x,e.y)) )
+    hash = lambda e: enumerate( map(self.topx,list(zip(e.x,e.y))) )
     for i,px in hash(w):
       s = self._map.get(px)
       if s:
         s.discard( (w,i) )
     
-  def next(self):
+  def __next__(self):
     """ This changes the inverse table by removing hits.
 
     Returns a (Whisker_Seg, index),(Whisker_Seg, index)  tuple
@@ -357,7 +360,7 @@ class CollisionTable(object):
     """
     todelete = []
     retval = None
-    for px,s in self._map.iteritems():
+    for px,s in self._map.items():
       if len(s) > 1:
         retval = s.pop(),s.pop()
         if retval[0][0] == retval[1][0]: # if it the same whisker hits this pixel twice
@@ -377,9 +380,9 @@ class CollisionTable(object):
   
   def counts( self ):
     tosc = lambda e: e/self._scale
-    im = zeros(map(tosc, self._shape))
+    im = zeros(list(map(tosc, self._shape)))
     imr = im.ravel()
-    for px,s in self._map.iteritems():
+    for px,s in self._map.items():
       imr[px] = len(set( [e for e,i in s] ))
     return im
 

@@ -22,8 +22,8 @@ def play_seed_angles(video,maxr=9,thresh=0.99,alpha=0.75,bg=63,every=slice(None)
   rc('image',interpolation='nearest');
   rc('figure.subplot',bottom=0.05,left=0.05,top=0.95,right=0.95);
   rc('figure',facecolor='w');
-  fids = range(*every.indices(len(video)))
-  for i,im in map(lambda e:(e,video[e]),fids):
+  fids = list(range(*every.indices(len(video))))
+  for i,im in [(e,video[e]) for e in fids]:
     out,angles = make(im)
     clf();
     imshow(angles,cmap=cm.hsv); 
@@ -33,7 +33,7 @@ def play_seed_angles(video,maxr=9,thresh=0.99,alpha=0.75,bg=63,every=slice(None)
     axis('off');
     draw();
     if renderto:
-      print 'Writing ',renderto%i
+      print('Writing ',renderto%i)
       sys.stdout.flush()
       savefig(renderto%i);
 
@@ -96,8 +96,8 @@ def is_trace_generated(image,r=10,thresh=100):
   out = zeros(image.shape)
   f = lambda im: trace.compute_seed_fields_windowed(im,maxr=r,maxiter=1,window=(0.0,0.0))
   angle_radians = f(image)[1];
-  for y in xrange(0,image.shape[0]):
-    for x in xrange(0,image.shape[1]):
+  for y in range(0,image.shape[0]):
+    for x in range(0,image.shape[1]):
       seed = trace.cSeed(x,y,int(cos(angle_radians[y,x])*100),int(sin(angle_radians[y,x])*100))
       t = trace.Trace_Whisker(seed,image)
       if(t and len(t.x)>thresh):
@@ -108,8 +108,8 @@ def trace_all(image,r=10,thresh=100):
   out = []
   f = lambda im: trace.compute_seed_fields_windowed(im,maxr=r,maxiter=1,window=(0.0,0.0))
   angle_radians = f(image)[1];
-  for y in xrange(0,image.shape[0]):
-    for x in xrange(0,image.shape[1]):
+  for y in range(0,image.shape[0]):
+    for x in range(0,image.shape[1]):
       seed = trace.cSeed(x,y,int(cos(angle_radians[y,x])*100),int(sin(angle_radians[y,x])*100))
       t = trace.Trace_Whisker(seed,image)
       if(t and len(t.x)>thresh):

@@ -85,15 +85,15 @@ class EmmissionDistributions(object):
   @staticmethod
   def _count_whiskers(wvd):
     nrows = 0
-    for fid,v in wvd.iteritems():
+    for fid,v in wvd.items():
       nrows += len(v)
     return nrows
 
   def _all_features(self, wvd, traj):
     data = zeros( ( self._count_whiskers(wvd), len(self._features)+3 ) ) #the extra 3 cols are for class id, fid, wid
     def iter():
-      for fid,v in wvd.iteritems():
-        for wid,w in v.iteritems():
+      for fid,v in wvd.items():
+        for wid,w in v.items():
           yield fid,wid,self.feature(w)
     for i,(fid,wid,fv) in enumerate(iter()):
       data[i,0] = self._classifier(wvd,traj,fid,wid)
@@ -123,7 +123,7 @@ class EmmissionDistributions(object):
     for state in self._states:
       self._distributions[state] = zeros( (nfeat,nbins) )
 
-    for i in xrange(nfeat):
+    for i in range(nfeat):
       ic = 3+i
       v = data[:,ic]     # Determine bins to compute histograms over for each feature
       #avg = v.mean()     # Bounds are limited to 3 times the standard deviation 
@@ -165,7 +165,7 @@ class EmmissionDistributions(object):
 
   def assign_state( self, fidwid ):
     """ Returns state, log2 probability """
-    states = self._distributions.keys()
+    states = list(self._distributions.keys())
     logp   = array( [ self.evaluate_by_lookup(fidwid,s) for s in states ] );
     idx = argmax(logp)
     return states[idx], logp[idx]
@@ -181,15 +181,15 @@ class EDTwoState(EmmissionDistributions):
 
   @staticmethod
   def _itertraj(traj):
-    for tid,v in traj.iteritems():
-      for fid,wid in v.iteritems():
+    for tid,v in traj.items():
+      for fid,wid in v.items():
         yield fid,wid
 
   @staticmethod
   def _make_classifer(traj):
     frames = set()
-    for v in traj.values():
-      frames.update( v.keys() )
+    for v in list(traj.values()):
+      frames.update( list(v.keys()) )
     labelled = set( list( EDTwoState._itertraj(traj) ) )
     def classifier(wvd,traj,wid,fid):
       return int( (wid,fid) in labelled ) if fid in frames else -1
@@ -222,8 +222,8 @@ class EDMultiState(EmmissionDistributions):
 
   @staticmethod
   def _itertraj(traj):
-    for tid,v in traj.iteritems():
-      for fid,wid in v.iteritems():
+    for tid,v in traj.items():
+      for fid,wid in v.items():
         yield fid,wid
 
   def _make_classifer(self, wvd,traj):
@@ -233,8 +233,8 @@ class EDMultiState(EmmissionDistributions):
     """
     labelled = set( list( self._itertraj(traj) ) )
     frames = set()
-    for v in traj.values():
-      frames.update( v.keys() )
+    for v in list(traj.values()):
+      frames.update( list(v.keys()) )
 
     self._nsteps = 0
 
@@ -242,9 +242,9 @@ class EDMultiState(EmmissionDistributions):
     wrowcmp = lambda a,b: wcmp(a[1],b[1])
     classmap = {}
     states   = set()
-    for fid,wv in wvd.iteritems():
+    for fid,wv in wvd.items():
       t = 0
-      for wid,w in sorted( wv.items(), cmp = wrowcmp ):
+      for wid,w in sorted( list(wv.items()), cmp = wrowcmp ):
         if (fid,wid) in labelled: #whisker
           name = names[1]%t
           t+=1
@@ -271,13 +271,13 @@ class EDMultiState(EmmissionDistributions):
     for prefix in ['junk','whisker']:
       acc = zeros( self._distributions['junk0'].shape )
       count = 0
-      for state,dist in self._distributions.iteritems():
+      for state,dist in self._distributions.items():
         if prefix == state[:len(prefix)]:
           count += 1
           acc += (2**dist)
       assert(count>0)
       acc = log2(acc/float(count))
-      for state in self._distributions.keys():
+      for state in list(self._distributions.keys()):
         if prefix == state[:len(prefix)]:
           self._distributions[state] =  acc.copy()
     
@@ -329,22 +329,22 @@ class LeftRightModel(object):
     S = self._S
     E = self.make_emmissions_matrix(sequence)
     T = self._T
-    seq = array( range(len(sequence)), dtype=int32)
+    seq = array( list(range(len(sequence))), dtype=int32)
     p,vp,s = trace.viterbi_log2( seq, S, T, E )
-    return map( lambda i: self.states[i], s ), p, vp
+    return [self.states[i] for i in s], p, vp
 
   def viterbi_by_lookup(self, fid, widseq):
     S = self._S
     E = self.make_emmissions_matrix_by_lookup([(fid,wid) for wid in widseq])
     T = self._T
-    seq = array( range(len(widseq)), dtype=int32)
+    seq = array( list(range(len(widseq))), dtype=int32)
     p,vp,s = trace.viterbi_log2( seq, S, T, E )
-    return map( lambda i: self.states[i], s ), p, vp
+    return [self.states[i] for i in s], p, vp
 
   @staticmethod
   def _itertrajinv(traj):
-    for tid,v in traj.iteritems():
-      for fid,wid in v.iteritems():
+    for tid,v in traj.items():
+      for fid,wid in v.items():
         yield (fid,wid),tid
 
   def train(self,wvd,traj, data=None):
@@ -363,8 +363,8 @@ class LeftRightModel(object):
 
     simplestates = EDTwoState( wvd, traj, do_estimate = False ) #builds the state space and classifier
     classify = simplestates._classifier
-    for fid,wv in wvd.iteritems():
-      wids = wvd.keys()
+    for fid,wv in wvd.items():
+      wids = list(wvd.keys())
       prev = classify(wvd,traj,fid,wids[0])
       if prev == -1: #frame absent
         continue
@@ -380,7 +380,7 @@ class LeftRightModel(object):
     E /= E.sum()
     for row in T:
       row /= row.sum()
-    S,E,T = map( log2, (S,E,T) )
+    S,E,T = list(map( log2, (S,E,T) ))
 
     self._simple_model = S,T,E,simplestates # just saved for debug/inspection
 
@@ -404,7 +404,7 @@ class LeftRightModel(object):
     #middle to end
     for src,row in enumerate(T): # no start as source state or end state
       for dst,logp in enumerate(row):
-        for time in xrange( lrstates._nsteps+1 ):
+        for time in range( lrstates._nsteps+1 ):
           if src == 0: #junk
             self._transitions.setdefault( map_state(src,time), {} )[map_state(dst,time  )] = log2(0.5) #logp
           else: #whisker
@@ -418,19 +418,19 @@ class LeftRightModel(object):
 
 def wid_sequence_from_frame( wv ):
   wrowcmp = lambda a,b: wcmp(a[1],b[1])
-  return [wid for wid,seg in sorted( wv.items(), cmp=wrowcmp )]
+  return [wid for wid,seg in sorted( list(wv.items()), cmp=wrowcmp )]
 
 def apply_model(wvd,model):
   logp = zeros( max(wvd.keys())+1 )
   vlogp = zeros( max(wvd.keys())+1 )
-  statemap = dict( [ ('whisker%d'%i,i) for i in xrange(model._statemodel._nsteps) ] ) #TODO: there's got to be a better way
+  statemap = dict( [ ('whisker%d'%i,i) for i in range(model._statemodel._nsteps) ] ) #TODO: there's got to be a better way
   traj = {}
   wrowcmp = lambda a,b: wcmp(a[1],b[1])
-  for fid, wv in wvd.iteritems():
+  for fid, wv in wvd.items():
     #print fid
     seq = wid_sequence_from_frame( wv ) #ordered wid's
     labels,p,vp = model.viterbi_by_lookup(fid, seq )  
-    tids = map( statemap.get, labels )
+    tids = list(map( statemap.get, labels ))
     logp[fid] = p
     vlogp[fid] = vp
 

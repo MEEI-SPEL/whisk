@@ -78,14 +78,14 @@ class cObject_Map(Structure):
               ( "objects",      POINTER(POINTER( cContour ))) ]
 
   def plot(self,*args,**kwargs):
-    for i in xrange( self.num_objects ):
+    for i in range( self.num_objects ):
       self.objects[i].contents.plot(*args,**kwargs)
 
   def plot_with_seeds( self, image, *args, **kwargs ):
     from pylab import imshow, cm, axis, subplots_adjust, show
     imshow( image, cmap = cm.gray, hold = 0, interpolation = 'nearest' )
     self.plot( *args, **kwargs )
-    for i in xrange(self.num_objects):
+    for i in range(self.num_objects):
       sds = find_seeds( self.objects[i], image )
       if sds:
         sds.plot( linewidths = (1,), 
@@ -98,7 +98,7 @@ class cObject_Map(Structure):
     return gcf()
 
   def draw(self, surface, color, scale, drawfunc ):
-    for i in xrange( self.num_objects ):
+    for i in range( self.num_objects ):
       self.objects[i].contents.draw(surface,color,scale,drawfunc)
 
 class cWhisker_Seg_Old(Structure):                 #typedef struct      
@@ -156,17 +156,17 @@ class cWhisker_Seg(Structure):                      #typedef struct
     <trace.cWhisker_Seg object at 0x03DACC60>
     """
     #first count the number of segments
-    nseg = sum( map(len, wvd.values()) )
+    nseg = sum( map(len, list(wvd.values())) )
     
     #create the constructor
     type_wv = cWhisker_Seg * nseg;
     
     #alloc and fill the array
     def itersegs(wvd):
-      for v in wvd.itervalues():
-        for w in v.itervalues():
+      for v in wvd.values():
+        for w in v.values():
           yield w
-    wv = type_wv( *map(cWhisker_Seg.CastFromWhiskerSeg,list(itersegs(wvd))) )
+    wv = type_wv( *list(map(cWhisker_Seg.CastFromWhiskerSeg,list(itersegs(wvd)))) )
     
     return wv
 
@@ -198,7 +198,7 @@ class cSeedVector(Structure):                  # typedef struct
                                                #   } Seed_Vector;   
   def asarray(self):
     a = zeros(( self.nseeds, 4))
-    for i in xrange( self.nseeds ):
+    for i in range( self.nseeds ):
       a[i] = self.seeds[i].asarray()
     return a
 
@@ -255,7 +255,7 @@ class Whisker_Seg(object):
       self.scores = zeros( source.len, dtype=float32 )
       self.thick  = zeros( source.len, dtype=float32 )
 
-      for i in xrange( source.len ):
+      for i in range( source.len ):
         self.x[i]      = source.x[i]
         self.y[i]      = source.y[i]
         self.thick[i]  = source.thick[i]
@@ -366,15 +366,15 @@ def Load_Whiskers( filename ):
   called once per application instance.
   """
   if not os.path.exists(filename):
-    raise IOError, "File not found."
+    raise IOError("File not found.")
   nwhiskers = c_int(0)
   wv = cWhisk.Load_Whiskers( filename, None, byref(nwhiskers) );
   # organize into dictionary for ui.py {frameid}{segid}
   whiskers = {}
-  for idx in xrange( nwhiskers.value ):
+  for idx in range( nwhiskers.value ):
     w = wv[idx]
     whiskers[ w.time ] = {}
-  for idx in xrange( nwhiskers.value ):
+  for idx in range( nwhiskers.value ):
     w = Whisker_Seg(wv[idx])
     whiskers[ w.time ][ w.id ] = w;
   cWhisk.Free_Whisker_Seg_Vec( wv, nwhiskers )
@@ -383,14 +383,14 @@ def Load_Whiskers( filename ):
 def Save_Whiskers( filename, whiskers ):
   #count the whiskers
   n = 0
-  for v in whiskers.itervalues():
+  for v in whiskers.values():
     n += len(v)
   #alloc the c whisker array
   wv = (cWhisker_Seg * n)() 
   #copy into c whisker array
   i = 0
-  for fid,v in whiskers.iteritems():
-    for wid,t in v.iteritems():
+  for fid,v in whiskers.items():
+    for wid,t in v.items():
       if not t:
         continue;
       wv[i].id   = wid
@@ -453,7 +453,7 @@ try:
                               costs.T.ctypes.data_as( POINTER(c_double) ),
                               costs.shape[1],
                               costs.shape[0] )
-    print assignment
+    print(assignment)
     map = {}
     for i,j in enumerate(assignment):
       if j != -1:
@@ -475,10 +475,10 @@ try:
       for j,bi in enumerate(b):
         d[i,j] = ((ai-bi)**2).sum()
     assignment,cost = bipartite_matching( d )
-    print "Matching cost: ", cost.value
+    print("Matching cost: ", cost.value)
     plot(a[:,0],a[:,1],'o')
     plot(b[:,0],b[:,1],'s')
-    for i,j in assignment.iteritems():
+    for i,j in assignment.items():
       plot([ a[i,0], b[j,0] ], [ a[i,1], b[j,1] ],'k--')
     return assignment
 
@@ -584,7 +584,8 @@ cWhisk.compute_seed_from_point_field_on_grid.argtypes = [
   POINTER( cImage ),    # output - slopes
   POINTER( cImage )]    # output - stats
 
-def get_response( image, (x,y) ):
+def get_response( image, xxx_todo_changeme ):
+  (x,y) = xxx_todo_changeme
   p = c_int( int(x) + int(y)*image.shape[1] )
   nx,ny,nz = c_int(),c_int(),c_int()
   #x is the axis that changes fastest with index, z is the slowest
@@ -632,7 +633,8 @@ def compute_object_map( image ):
   cim = cImage.fromarray( image )
   return cWhisk.get_objectmap( byref(cim) ).contents
 
-def compute_seed( image, (x,y), maxr = 4 ):
+def compute_seed( image, xxx_todo_changeme1, maxr = 4 ):
+  (x,y) = xxx_todo_changeme1
   cim = cImage.fromarray( image )
   p = c_int( int(x) + int(y)*image.shape[1] )
   pcseed = cWhisk.compute_seed_from_point( cim, p, c_int(maxr) ); 
@@ -641,7 +643,8 @@ def compute_seed( image, (x,y), maxr = 4 ):
     return pcseed.contents
   return None
 
-def compute_seed_ex( image, (x,y), maxr = 4 ):
+def compute_seed_ex( image, xxx_todo_changeme2, maxr = 4 ):
+  (x,y) = xxx_todo_changeme2
   m = c_float()
   stat = c_float()
   cim = cImage.fromarray( image )
@@ -697,7 +700,7 @@ def compute_seed_fields_windowed_on_objects( image,  maxr = 4, maxiter=1, window
   cstats  = cImage.fromarray(stats)
 
   objs = cWhisk.get_objectmap( byref(cim) ).contents
-  for i in xrange( objs.num_objects ):
+  for i in range( objs.num_objects ):
     ptrace = objs.objects[i]
     cWhisk.compute_seed_from_point_field_windowed_on_contour( cim, ptrace, 
                                                               c_int(maxr), c_int(maxiter),
@@ -774,7 +777,7 @@ def find_segments( image, iframe=0):
   cim = cImage.fromarray(image)
   n = c_int()
   cwv = cWhisk.find_segments( iframe, byref(cim), None, byref(n) )
-  wv = [ Whisker_Seg( cwv[i] ) for i in xrange( n.value ) ] # copy into friendlier container
+  wv = [ Whisker_Seg( cwv[i] ) for i in range( n.value ) ] # copy into friendlier container
   cWhisk.Free_Whisker_Seg_Vec( cwv, n )                     # free
   return wv
 
@@ -793,7 +796,7 @@ class cViterbiResult(Structure):
                ( "sequence" , POINTER( c_int )   )]   ## Most likely state sequence 
   def asarray(self): # this is a copy
     s = zeros( self.n, dtype = int32 )
-    for i in xrange( self.n ):
+    for i in range( self.n ):
       s[i] = self.sequence[i]
     return s
   def get(self):

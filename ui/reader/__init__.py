@@ -9,10 +9,10 @@ license terms (http://license.janelia.org/license/jfrc_copyright_1_1.html).
 """
 import warnings
 warnings.simplefilter( "ignore", UserWarning )
-from seq import SeqReader
-from tiff import TiffReader
-from ffmpeg import FFMPEGReader
-from reader import TransposedReader, AdjustStippledGainReader
+from .seq import SeqReader
+from .tiff import TiffReader
+from .ffmpeg import FFMPEGReader
+from .reader import TransposedReader, AdjustStippledGainReader
 import os
 warnings.simplefilter( "default", UserWarning )
 
@@ -36,7 +36,7 @@ def Reader(filename, transpose = False, adjuststipple = False):
   elif is_ffmpeg_ext(ext):
     ret = FFMPEGReader( filename )
   else:
-    raise Exception,"File type (%s) not supported."%ext
+    raise Exception("File type (%s) not supported."%ext)
   if adjuststipple:
     ret = AdjustStippledGainReader( ret )
   if transpose:

@@ -11,7 +11,7 @@ from ctypes import *
 from ctypes.util import find_library
 import numpy
 from numpy import zeros
-from reader import IMovieReader
+from .reader import IMovieReader
 import os,sys
 
 dllpath = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0]
@@ -102,7 +102,7 @@ class SeqReader(IMovieReader):
 
   def __getitem__(self,idx):
     if isinstance(idx, slice):
-      shape = [len( range(len(self))[idx] ) ]
+      shape = [len( list(range(len(self)))[idx] ) ]
       shape.extend(self.size)
       indices = idx.indices( len(self) )
       buffer = zeros( shape, dtype = _bpp[ self._reader.contents.bitdepthreal ] )

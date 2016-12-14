@@ -19,13 +19,14 @@ def helper_face_point(shape, directive):
   try:
     return helpers[directive]()
   except KeyError:
-    print "Available directives"
-    for k in helpers.iterkeys():
-      print '\t',k
-    raise Exception, 'Could not use supplied directive: %s'%directive
+    print("Available directives")
+    for k in helpers.keys():
+      print('\t',k)
+    raise Exception('Could not use supplied directive: %s'%directive)
 
 
-def make_side_function((cx,cy)):
+def make_side_function(xxx_todo_changeme):
+  (cx,cy) = xxx_todo_changeme
   d2 = lambda e,side: (e.x[side]-cx)**2 + (e.y[side]-cy)**2
   s  = lambda e: 0 if d2(e,0)<d2(e,-1) else -1
   return s

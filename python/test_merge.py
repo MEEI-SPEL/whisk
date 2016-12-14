@@ -25,6 +25,7 @@ from pylab import imshow
 import pdb
 from trace import Whisker_Seg
 import sys
+from functools import reduce
 #from pylab import *
 
 def test1():
@@ -80,8 +81,8 @@ def test1():
   return w,movie
 
 def merge_all( whiskers, shape ):
-  for fid, wvd in whiskers.iteritems():
-    print fid
+  for fid, wvd in whiskers.items():
+    print(fid)
     merge_all_in_frame( wvd, shape )
 
 def merge_all_in_frame(wvd, shape):
@@ -183,18 +184,18 @@ class WhiskerGroup(object):
     for i,v in enumerate(self.domain()):
       names[v] = str(id(v)) #str(i) 
     
-    print >> file, "digraph %s {"%name
-    for k in self._graph.iterkeys():
-      print >> file, "\t%s;"%(names[k])
-    for k,v in self._graph.iteritems():
+    print("digraph %s {"%name, file=file)
+    for k in self._graph.keys():
+      print("\t%s;"%(names[k]), file=file)
+    for k,v in self._graph.items():
       for e in v:
-        print >> file, "\t%s -> %s;"%(names[k],names[e])
-    print >> file, "}"
+        print("\t%s -> %s;"%(names[k],names[e]), file=file)
+    print("}", file=file)
     
   def preimage(self,a):
     """ Get preimage of a in graph """
     preimage = []
-    for k,v in self._graph.iteritems():
+    for k,v in self._graph.items():
       if a in v:
         preimage.append(k)
     return preimage
@@ -206,7 +207,7 @@ class WhiskerGroup(object):
     >>> condition = lambda e: len(e)<minlen  # prune if this returns true
     >>> g.prune(condition)
     """      
-    for k,v in self._graph.items():
+    for k,v in list(self._graph.items()):
       if condition(k):
         del self._graph[k]
       else:    
@@ -224,7 +225,7 @@ class WhiskerGroup(object):
     Returns self.
     """
     # 1. union graphs    # if self contains other, this is an identity op on self
-    for k,v in other._graph.iteritems():
+    for k,v in other._graph.items():
       if k in self._graph:
         t = set(self._graph[k])
         t.update(v)
@@ -251,11 +252,11 @@ class WhiskerGroup(object):
     return s
   
   def sources(self):
-    return set( [k for k,v in self._graph.iteritems() if len(v)] )
+    return set( [k for k,v in self._graph.items() if len(v)] )
   
   def sinks(self):
     def itersinks():
-      for v in self._graph.itervalues():
+      for v in self._graph.values():
         for e in v:
           yield e
     return set([e for e in itersinks()])
@@ -356,14 +357,14 @@ class ResolutionGroup(WhiskerGroup):
       #     ...update the mainnodes so only `valid` subportions of the whisker
       #        are used to update the table
       self._graph = {}
-      for k in self.breaks.iterkeys():
+      for k in self.breaks.keys():
         self._graph[k] = [] 
       self.middle = None
       self.mainnodes = [ e for e in self.mainnodes if not condition(e) ] 
     else:
       for e in [k for k in self.mainnodes if condition(k)]:
         self.mainnodes.remove(e)
-      for k,v in self.breaks.iteritems():
+      for k,v in self.breaks.items():
         for e in [s for s in v if s and condition(s)]:
           v.remove(e)
       WhiskerGroup.prune(self, condition)
@@ -385,19 +386,19 @@ class ResolutionGroup(WhiskerGroup):
   def resolve(self, g, w ):
     """ Merge self with g at w. """
     if w in set( g.domain() ):
-      print "involved"
+      print("involved")
       if w in self.breaks:
-        print "in the breaks"
+        print("in the breaks")
         tails = g.sinks()   - g.sources()
         roots = g.sources() - g.sinks()
         if w in roots:
-          print "\troot"
+          print("\troot")
           g.join( w, self, self.breaks[w][-1] ) # join tail to root
         elif w in tails:
-          print "\ttail"
+          print("\ttail")
           g.join( w, self, self.breaks[w][0] ) # join root to tail
         else: #middle
-          print "\tmiddle"
+          print("\tmiddle")
           g.join( w, self, self.middle )
         return g
     # didn't satisfy above, so...
@@ -521,7 +522,7 @@ def solve_polynomial_join( left, right):
   rx =  right.x[nr]
   lx =  left.x[-nl]
   L = hypot( rx-lx, ry-ly )
-  print "L:%g"%L
+  print("L:%g"%L)
   yv = matrix(   [[  ry                          ],   
                   [  ly                          ],   
                   [  dry * L                     ],   
@@ -535,7 +536,7 @@ def solve_polynomial_join( left, right):
   
   if not (isfinite(cx).any() and isfinite(cy).any()):
     pdb.set_trace()
-  return map( lambda t: array(t).squeeze() , (cx,cy) )
+  return [array(t).squeeze() for t in (cx,cy)]
 
 def plot_join(px,py,*args,**kwargs):
   from pylab import plot, polyval
@@ -617,7 +618,7 @@ def compute_join_err( left, right, polynomial = None ):
             [  left.y[i], polyval( py, utl[i-il[0]] ) ],'r.-')
     ion(); show();
 
-  print "r:%7.5g l:%7.5g"%( hypot( dxr, dyr ).mean() ,hypot( dxl, dyl ).mean() )
+  print("r:%7.5g l:%7.5g"%( hypot( dxr, dyr ).mean() ,hypot( dxl, dyl ).mean() ))
   return hypot( dxl, dyl ).mean() ,hypot( dxr, dyr ).mean() 
   #return d/float( len(dxr)+len(dxl) )
 
@@ -626,7 +627,7 @@ def build_inverse_table( wv, shape, scale ):
   map = {}
   stride = shape[1]/scale
   topx = lambda p: int(p[0]/scale) + stride * int(p[1]/scale)
-  for i,w in wv.iteritems():
+  for i,w in wv.items():
     for j,p in enumerate(zip(w.x,w.y)):
       idx = topx(p)
       if idx in map:
@@ -664,9 +665,9 @@ def update_inverse_table( map, w, oldid, newid, shape, scale, bnd = None ):
 
 def compute_table_count( table, shape, scale, *args, **kwargs ):
   tosc = lambda e: e/scale
-  im = zeros(map(tosc, shape))
+  im = zeros(list(map(tosc, shape)))
   imr = im.ravel()
-  for px,s in table.iteritems():
+  for px,s in table.items():
     imr[px] = len(s)
   return im
 
@@ -674,7 +675,7 @@ def get_next_match( map ):
   """ This changes the inverse table by removing hits"""
   todelete = []
   retval = None
-  for px,s in map.iteritems():
+  for px,s in map.items():
     if len(s) > 1:
       retval = s.pop(),s.pop()
       if retval[0][0] == retval[1][0]:
@@ -692,9 +693,11 @@ def get_next_match( map ):
 
   return retval
 
-def trace_overlap( (wa,i), (wb,j), thresh = 2.0 ):
+def trace_overlap(xxx_todo_changeme, xxx_todo_changeme1, thresh = 2.0 ):
   # assumes that indexes run along same direction (i.e. x is monitonically
   # increasing along index )
+  (wa,i) = xxx_todo_changeme
+  (wb,j) = xxx_todo_changeme1
   def dist(ia,ib):
     a,b = wa[ia], wb[ib]
     return hypot( a[0] - b[0], a[1] - b[1] )

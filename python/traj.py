@@ -19,6 +19,7 @@ from trace import cWhisker_Seg
 import warnings
 
 import pdb
+from functools import reduce
 
 dllpath = os.path.split(os.path.abspath(__file__))[0]
 if sys.platform == 'win32':
@@ -134,7 +135,7 @@ class MeasurementsTable(object):
     self._free_measurements(self._measurements)
 
   @staticmethod
-  def _fromWhiskerDict(wvd, (facex,facey), faceaxis ):
+  def _fromWhiskerDict(wvd, xxx_todo_changeme, faceaxis ):
     """
     Returns: LP_cMeasurements, int
       
@@ -142,6 +143,7 @@ class MeasurementsTable(object):
              when finished.  Potential memory leak.  For this reason, use the 
              MeasurementsTable constructor (__init__) instead.
     """
+    (facex,facey) = xxx_todo_changeme
     wv = trace.cWhisker_Seg.CastDictToArray(wvd)
     return ctraj.Whisker_Segments_Measure(wv,len(wv), facex, facey, faceaxis), len(wv)
   
@@ -192,9 +194,9 @@ class MeasurementsTable(object):
     data = self.asarray()
     t = {}
     for row in data:
-      r = map(int,row[:3])
+      r = list(map(int,row[:3]))
       t.setdefault( r[0],{} ).setdefault( r[1], r[2] ) 
-    if -1 in t.keys():
+    if -1 in list(t.keys()):
       del t[-1]
     return t
 
@@ -207,10 +209,10 @@ class MeasurementsTable(object):
     """
     trajectories = self.get_trajectories()
     f = open( filename, 'w' )
-    for k,v in trajectories.iteritems():
+    for k,v in trajectories.items():
       if not k in excludes:
-        for s,t in v.iteritems():
-          print >> f, '%d,%d,%d'%(k,s,t)
+        for s,t in v.items():
+          print('%d,%d,%d'%(k,s,t), file=f)
     return self
 
   def load_trajectories(self,filename ):
@@ -253,11 +255,11 @@ class MeasurementsTable(object):
     True
     """
     inv = {}
-    for tid,t in traj.iteritems():
-      for k in t.iteritems():
+    for tid,t in traj.items():
+      for k in t.items():
         inv[k] = tid  
 
-    for i in xrange(self._nrows):  #update new
+    for i in range(self._nrows):  #update new
       row = self._measurements[i]
       s = inv.get( (row.fid,row.wid) )
       row.state = s if (not s is None) else -1 
@@ -282,7 +284,7 @@ class MeasurementsTable(object):
                               byref(mn),
                               byref(mx))
     f = lambda x: x.value if x.value >=0 else 0
-    return map(f,[mn,mx])
+    return list(map(f,[mn,mx]))
 
   def iter_state(self):
     """
@@ -296,7 +298,7 @@ class MeasurementsTable(object):
     3
     """
     mn,mx = self.get_state_range()
-    return xrange(mn,mx+1)
+    return range(mn,mx+1)
 
   def get_shape_table(self):
     """  
@@ -565,7 +567,7 @@ class MeasurementsTable(object):
     frames = ctraj.Measurements_Tables_Get_Diff_Frames( self._measurements, self._nrows, 
                                                         table._measurements, table._nrows, 
                                                         byref(nframes) )
-    return [frames[i] for i in xrange(nframes.value)]
+    return [frames[i] for i in range(nframes.value)]
 
   def est_length_threshold(self,lowpx=1.0/0.04,highpx=50.0/0.04):
     ncount = c_int(0)
@@ -673,8 +675,8 @@ def batch_make_measurements(sourcepath, ext = '*.seq', label = 'curated'):
     prefix = root + '[%s]'%label
     if not os.path.exists( prefix + '.measurements' ):
       t,tid = load_trajectories( prefix + '.trajectories' )
-      print prefix
-      print t.keys()
+      print(prefix)
+      print(list(t.keys()))
       w = Load_Whiskers( prefix + '.whiskers' ) 
       data = get_summary_data( prefix + '.npy', w, t )
       MeasurementsTable( data ).update_velocities().save( prefix + '.measurements' )
@@ -693,44 +695,44 @@ class Tests_MeasurementsTable(unittest.TestCase):
   This test case is subclassed to handle different setups.
   """
   def test_LoadedDataValid(self):
-    self.failUnless( self.data[:,0].min() == -1 )
-    self.failUnless( self.data[:,0].max() > 1   )
+    self.assertTrue( self.data[:,0].min() == -1 )
+    self.assertTrue( self.data[:,0].max() > 1   )
 
   def test_TableInstanced(self):
-    self.failUnlessEqual( self.table._nrows, self.data.shape[0] ) 
-    self.failUnlessEqual( self.table._measurements[0].n, self.data.shape[1]-3 )
+    self.assertEqual( self.table._nrows, self.data.shape[0] ) 
+    self.assertEqual( self.table._measurements[0].n, self.data.shape[1]-3 )
 
   def test_GetShapeMeasures(self):
     shape = self.table.get_shape_table()
-    self.failUnlessEqual( shape.shape[0], self.data.shape[0] )
-    self.failUnlessEqual( shape.shape[1], self.data.shape[1]-3 )
+    self.assertEqual( shape.shape[0], self.data.shape[0] )
+    self.assertEqual( shape.shape[1], self.data.shape[1]-3 )
     #self.failUnlessAlmostEqual( ((self.data[:,3:] - shape)**2).sum(), 0.0, 7 ) #can't fix right now...not important...
 
   def test_SortByStateAndTime(self):
     self.table.sort_by_state_time()
-    for i in xrange(1, self.table._nrows):
-        self.failIf( (self.table._measurements[i-1].state > self.table._measurements[i].state) and 
+    for i in range(1, self.table._nrows):
+        self.assertFalse( (self.table._measurements[i-1].state > self.table._measurements[i].state) and 
                      (self.table._measurements[i-1].fid   > self.table._measurements[i].fid) )
-    for i in xrange(1, self.table._nrows):
-        self.failIf( self.table._measurements[i-1].state  > self.table._measurements[i].state )
+    for i in range(1, self.table._nrows):
+        self.assertFalse( self.table._measurements[i-1].state  > self.table._measurements[i].state )
   
   def test_SortByTime(self):
     self.table.sort_by_time()
-    for i in xrange(1, self.table._nrows):
-        self.failIf( self.table._measurements[i-1].fid  > self.table._measurements[i].fid )
+    for i in range(1, self.table._nrows):
+        self.assertFalse( self.table._measurements[i-1].fid  > self.table._measurements[i].fid )
 
   def test_ComputeVelocities_SomeVelocitiesAreValid(self):
     self.table.update_velocities()    
     any = lambda x,y: x or y  
     is_row_valid = lambda i: self.table._measurements[i].valid_velocity                                           
-    self.failUnless( reduce( any, map( is_row_valid, xrange(self.table._nrows) )) )
+    self.assertTrue( reduce( any, list(map( is_row_valid, range(self.table._nrows) ))) )
 
   def test_SizeSelectVelocities_StatesPartitionTable(self):
     self.table.update_velocities()
     cnt = 0
     for state in map(int, set(self.data[:,0])):
       cnt += ctraj.Measurements_Table_Size_Select_State( self.table._measurements, self.table._nrows, c_int(state) )
-    self.failUnlessEqual( cnt, self.data.shape[0] )
+    self.assertEqual( cnt, self.data.shape[0] )
 
   def test_SelectDataByState(self):
     """
@@ -747,8 +749,8 @@ class Tests_MeasurementsTable(unittest.TestCase):
   
   def test_LoadNonexistentFile(self):
     filename = 'nonexistent.measurement'
-    self.failIf( os.path.exists(filename) )
-    self.failUnlessRaises(IOError, MeasurementsTable, filename)
+    self.assertFalse( os.path.exists(filename) )
+    self.assertRaises(IOError, MeasurementsTable, filename)
 
 class Tests_MeasurementsTable_FromDoubles( Tests_MeasurementsTable ):
   def setUp(self):
@@ -757,7 +759,7 @@ class Tests_MeasurementsTable_FromDoubles( Tests_MeasurementsTable ):
   
   def test_VelocitiesInitiallyZero(self):
     vel = self.table.get_velocities_table()
-    self.failUnlessAlmostEqual( vel.sum(), 0.0)
+    self.assertAlmostEqual( vel.sum(), 0.0)
 
 
 class Tests_MeasurementsTable_FromFile( Tests_MeasurementsTable ):
@@ -772,40 +774,40 @@ class Tests_Distributions(unittest.TestCase):
     self.dists = Distributions(self.table)
 
   def test_PostBuildSortStateIsTime(self):
-    self.failUnlessEqual( self.table._sort_state, 'time' )
+    self.assertEqual( self.table._sort_state, 'time' )
 
   def test_InitializationTypeCheck(self):
-    self.failUnlessRaises( AssertionError, Distributions, zeros(10) )
+    self.assertRaises( AssertionError, Distributions, zeros(10) )
 
   def test_ShapeDistributionsAsArray(self):
     d = self.dists._shp[0].asarray()
-    self.failUnless( isinstance( d, numpy.ndarray) )
+    self.assertTrue( isinstance( d, numpy.ndarray) )
     nstates, nmeasures, nbins = d.shape
-    self.failUnlessEqual( nstates,   self.dists._shp[0].n_states )
-    self.failUnlessEqual( nmeasures, self.dists._shp[0].n_measures )
-    self.failUnlessEqual( nbins,     self.dists._shp[0].n_bins )
+    self.assertEqual( nstates,   self.dists._shp[0].n_states )
+    self.assertEqual( nmeasures, self.dists._shp[0].n_measures )
+    self.assertEqual( nbins,     self.dists._shp[0].n_bins )
 
   def test_ShapeDistributionBinsAsArray(self):
     bins = self.dists._shp[0].bins_as_array()
-    self.failUnless( isinstance( bins, numpy.ndarray) )
+    self.assertTrue( isinstance( bins, numpy.ndarray) )
     nmeasures, nbins = bins.shape
-    self.failUnlessEqual( nmeasures, self.dists._shp[0].n_measures )
-    self.failUnlessEqual( nbins,     self.dists._shp[0].n_bins )
+    self.assertEqual( nmeasures, self.dists._shp[0].n_measures )
+    self.assertEqual( nbins,     self.dists._shp[0].n_bins )
   
   def test_VelocityDistributionsAsArray(self):
     d = self.dists._vel[0].asarray()
-    self.failUnless( isinstance( d, numpy.ndarray) )
+    self.assertTrue( isinstance( d, numpy.ndarray) )
     nstates, nmeasures, nbins = d.shape
-    self.failUnlessEqual( nstates,   self.dists._vel[0].n_states )
-    self.failUnlessEqual( nmeasures, self.dists._vel[0].n_measures )
-    self.failUnlessEqual( nbins,     self.dists._vel[0].n_bins )
+    self.assertEqual( nstates,   self.dists._vel[0].n_states )
+    self.assertEqual( nmeasures, self.dists._vel[0].n_measures )
+    self.assertEqual( nbins,     self.dists._vel[0].n_bins )
   
   def test_VelocityDistributionBinsAsArray(self):
     bins = self.dists._vel[0].bins_as_array()
-    self.failUnless( isinstance( bins, numpy.ndarray) )
+    self.assertTrue( isinstance( bins, numpy.ndarray) )
     nmeasures, nbins = bins.shape
-    self.failUnlessEqual( nmeasures, self.dists._vel[0].n_measures )
-    self.failUnlessEqual( nbins,     self.dists._vel[0].n_bins )
+    self.assertEqual( nmeasures, self.dists._vel[0].n_measures )
+    self.assertEqual( nbins,     self.dists._vel[0].n_bins )
 
 #
 # Declarations 
@@ -916,7 +918,7 @@ if __name__=='__main__':
                 Tests_Distributions 
                 ]
   suite = reduce( lambda a,b: a if a.addTest(b) else a, 
-                  map( unittest.defaultTestLoader.loadTestsFromTestCase, testcases ) 
+                  list(map( unittest.defaultTestLoader.loadTestsFromTestCase, testcases )) 
                 )
   suite.addTest( doctest.DocTestSuite() )
   runner = unittest.TextTestRunner(verbosity=2,descriptions=1).run(suite)

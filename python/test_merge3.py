@@ -10,6 +10,7 @@ from tests import plot_whiskers
 from ui.whiskerdata.trace import Whisker_Seg
 from numpy import *
 import pdb
+from functools import reduce
 
 def load():
   from ui.whiskerdata import load_whiskers, load_trajectories
@@ -28,21 +29,21 @@ def load():
   return w,movie
 
 def check_bounds(wvd,shape):
-  for fid, wv in wvd.iteritems():
-    for i,w in wv.iteritems():
+  for fid, wv in wvd.items():
+    for i,w in wv.items():
       for x,y,t,s in w:
         if x<0 or x>=shape[1] or y<0 or y>=shape[0]:
-          print "out of bounds"
+          print("out of bounds")
           pdb.set_trace()
         if not ( w.x.flags.contiguous and w.y.flags.contiguous ):
-          print "not contiguous"
+          print("not contiguous")
           pdb.set_trace()
   
 
 def fix(wvd,movie,scale=2, signal_per_pixel = 0, max_dist = 60, max_angle = 20.*pi/180.):
   shape = movie[0].shape
-  for fid,wv in wvd.items():
-    print fid
+  for fid,wv in list(wvd.items()):
+    print(fid)
     table = CollisionTable( wv, shape, scale )
     r = set( resolution( table, wv ) )
     for j,l in choose_gaps(movie[fid],r,signal_per_pixel,max_dist,max_angle):
@@ -210,7 +211,7 @@ def solve_polynomial_join( left, right, reverse = 0):
   rx = right.x[ 0]             ## right.x[nr] 
   lx = left.x[-1 ]             ## left.x[-nl] 
   L = hypot( rx-lx, ry-ly )    # Approximate dl/dt  
-  print "L:%g"%L
+  print("L:%g"%L)
   yv = matrix(   [[  ly                          ],   
                   [  ry                          ],   
                   [  dly * L                     ],    # dy/dt = dy/dl * dl/dt
@@ -224,7 +225,7 @@ def solve_polynomial_join( left, right, reverse = 0):
   
   if not (isfinite(cx).any() and isfinite(cy).any()):
     pdb.set_trace()
-  return map( lambda t: array(t).squeeze() , (cx,cy) )
+  return [array(t).squeeze() for t in (cx,cy)]
 
 def plot_join(px,py,*args,**kwargs):
   from pylab import plot, polyval
@@ -255,7 +256,7 @@ def filter_ends( wv, min_score, shape, border = 10 ):
 
   Returns an iterator yielding (Whisker_Seg, side).
   """
-  maxy, maxx = map( lambda x: x - border, shape )
+  maxy, maxx = [x - border for x in shape]
   minx, miny = border, border
   test_point = lambda x,y: x>minx and x<maxx and y > miny and y < maxy
   bordertest = lambda e,side: test_point( e.x[side], e.y[side] )
@@ -329,7 +330,7 @@ def choose_gaps(im,wv, signal_per_pixel = 0.0, max_dist=60, max_angle = pi/4.):
         l = compute_join_score(im,px,py)
         if l < -signal_per_pixel:
           #plot_test(px,py)
-          print "\tScore: %g Theta: %g"%(l,jth*180/pi)
+          print("\tScore: %g Theta: %g"%(l,jth*180/pi))
           e = make_joining_whisker(px,py,d,b.thick[-1],b.scores[-1],a.thick[ 0],a.scores[ 0])
           yield (b,e,a),l
 
@@ -360,8 +361,10 @@ def gap_measures(im,wv):
       #  plot_join(px,py)
   return d,l,cx,cy
 
-def trace_overlap( (wa,i), (wb,j), thresh = 2.0 ):
+def trace_overlap(xxx_todo_changeme, xxx_todo_changeme1, thresh = 2.0 ):
   # DONE: does not assume that indexes run along same direction
+  (wa,i) = xxx_todo_changeme
+  (wb,j) = xxx_todo_changeme1
   def dist(ia,ib):
     a,b = wa[ia], wb[ib]
     return hypot( a[0] - b[0], a[1] - b[1] )
@@ -483,7 +486,7 @@ def trace_overlap( (wa,i), (wb,j), thresh = 2.0 ):
 
 def resolution(table, wvd):
   rest = set(wvd.values())
-  match = table.next()
+  match = next(table)
   while match:
     keep,discard = merge(match)
     if discard: 
@@ -493,7 +496,7 @@ def resolution(table, wvd):
         yield a
       for a,i in match:
         rest.discard(a)
-    match = table.next()
+    match = next(table)
   for a in rest:
     yield a
 
@@ -528,8 +531,8 @@ def merge( match ):
           dep[mb[0]] = 1
   # partition into two sets.  Those to keep and those to discard.
   # Those to keep depend on none of the others.
-  return [ k for k,v in dep.iteritems() if v==0 ], \
-         [ k for k,v in dep.iteritems() if v!=0 ]
+  return [ k for k,v in dep.items() if v==0 ], \
+         [ k for k,v in dep.items() if v!=0 ]
 
 class CollisionTable(object):
   def __init__(self, wvd, shape, scale):
@@ -545,14 +548,14 @@ class CollisionTable(object):
   def _build_inverse_table(self,  wvd ):
     g = enumerate(wvd)
     if isinstance(wvd, dict):
-      g = wvd.iteritems()
+      g = iter(wvd.items())
     for i,w in g:
       self.add(w)
 
   def update( self, changes ):
     """ Changes is a dict mapping old whisker segments to new segments """
     last = None
-    for w,p in changes.iteritems():
+    for w,p in changes.items():
       self.remove(w)
       if p:
         self.add(p[0]) # add back ends
@@ -563,7 +566,7 @@ class CollisionTable(object):
 
   def add(self, w):
     if not w: return
-    hash = lambda e: enumerate( map(self.topx,zip(e.x,e.y)) )
+    hash = lambda e: enumerate( map(self.topx,list(zip(e.x,e.y))) )
     for i,px in hash(w):
       self._map.setdefault(px,set()).add( (w,i) )
     for i,px in hash(w): # scan back through and remove repeat hits on a pixel
@@ -572,19 +575,19 @@ class CollisionTable(object):
 
   def remove(self, w):
     if not w: return
-    hash = lambda e: enumerate( map(self.topx,zip(e.x,e.y)) )
+    hash = lambda e: enumerate( map(self.topx,list(zip(e.x,e.y))) )
     for i,px in hash(w):
       s = self._map.get(px)
       if s:
         s.discard( (w,i) )
     
   def __iter__(self):
-    m = self.next()
+    m = next(self)
     while m:
       yield m
-      m = self.next()
+      m = next(self)
 
-  def next(self):
+  def __next__(self):
     """ This changes the inverse table by removing hits.
 
     Returns a (Whisker_Seg, index),(Whisker_Seg, index)...  tuple
@@ -592,7 +595,7 @@ class CollisionTable(object):
     """
     todelete = []
     retval = None
-    for px,s in self._map.iteritems():
+    for px,s in self._map.items():
       todelete.append(px) # get rid of references to visited pixels
       if len(s) > 1:
         retval = s
@@ -605,8 +608,8 @@ class CollisionTable(object):
   
   def counts( self ):
     tosc = lambda e: e/self._scale
-    im = zeros(map(tosc, self._shape))
+    im = zeros(list(map(tosc, self._shape)))
     imr = im.ravel()
-    for px,s in self._map.iteritems():
+    for px,s in self._map.items():
       imr[px] = len(s) #len(set( [e for e,i in s] ))
     return im

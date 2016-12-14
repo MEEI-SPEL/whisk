@@ -33,7 +33,7 @@ if __name__ == '__main__':
   src, dst = args
 
   if not os.path.exists(os.path.split(dst)[0]): # check path, do this before doing long calculation
-    raise IOError, "Could not find destination file %s"%dst
+    raise IOError("Could not find destination file %s"%dst)
 
   #
   # Get data from source
@@ -45,7 +45,7 @@ if __name__ == '__main__':
   elif ext == '.measurements':
     data = traj.MeasurementsTable(src).asarray()
   else:
-    raise IOError, "Source file extension not recognized.  Got: %s"%ext
+    raise IOError("Source file extension not recognized.  Got: %s"%ext)
 
   traj = summary._simpletraj(data)
 

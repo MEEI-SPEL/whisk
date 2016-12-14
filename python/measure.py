@@ -22,6 +22,7 @@ Copyright (c) 2009 HHMI. Free downloads and distribution are allowed as long as
 proper credit is given to the author.  All other rights reserved.
 """
 import warnings
+from functools import reduce
 warnings.simplefilter("ignore",UserWarning)
 import optparse
 import os
@@ -33,7 +34,7 @@ from ui.whiskerdata import load_trajectories
 warnings.simplefilter("default",UserWarning)
 
 def ext_cmp(*args):
-  return reduce( cmp, map( lambda x: os.path.splitext(x)[-1], args ) )
+  return reduce( cmp, [os.path.splitext(x)[-1] for x in args] )
 
 def _fmt(s):
   import re
@@ -77,12 +78,12 @@ if __name__ == '__main__':
     parser.error( "Expected 1 or 2 source files as arguments but recieved %d."%len(args) )
   if not os.path.exists(os.path.split(dst)[0]): 
     if os.path.split(dst)[0]!='':
-      raise IOError, "Could not find destination path %s"%os.path.split(dst)[0]
+      raise IOError("Could not find destination path %s"%os.path.split(dst)[0])
   if not all( map( os.path.exists, args )):
-    raise IOError, "Could not find one or more input source files."
+    raise IOError("Could not find one or more input source files.")
 
 
-  if all(map( lambda f: os.path.splitext(f)[-1] in ['.trajectories','.whiskers'], args )):
+  if all([os.path.splitext(f)[-1] in ['.trajectories','.whiskers'] for f in args]):
     if len(args)==1:
       src = args[0]
       tfile = None
@@ -95,14 +96,14 @@ if __name__ == '__main__':
       t,tid = load_trajectories( tfile )
       summary.commit_traj_to_data_table( t, data ) 
     
-  elif all(map( lambda f: os.path.splitext(f)[-1] in ['.trajectories','.measurements'], args )):  
-    sources = dict( map( lambda f: (os.path.splitext(f)[-1], f), args ) )
+  elif all([os.path.splitext(f)[-1] in ['.trajectories','.measurements'] for f in args]):  
+    sources = dict( [(os.path.splitext(f)[-1], f) for f in args] )
 
     
     try:
       data = traj.MeasurementsTable( sources['.measurements'] ).asarray()
     except KeyError:
-      raise UserException, "A .measurements file must be provided as one of the source files."
+      raise UserException("A .measurements file must be provided as one of the source files.")
 
     try:
       t,tid = load_trajectories( sources['.trajectories'] )

@@ -16,8 +16,8 @@ Use is subject to Janelia Farm Research Campus Software Copyright 1.1
 license terms (http://license.janelia.org/license/jfrc_copyright_1_1.html).
 """
 
-import scheduler
-from scheduler import LastOnlyScheduler
+from . import scheduler
+from .scheduler import LastOnlyScheduler
 import trace
 import traj
 from trace import Save_Whiskers
@@ -45,17 +45,17 @@ def close():
 
 def copy_whiskers( whiskers ):
   newthing = {}
-  for s,t in whiskers.iteritems():
+  for s,t in whiskers.items():
     newthing[s] = {}
-    for u,v in t.iteritems():
+    for u,v in t.items():
       newthing[s][u] = v.copy()
   return newthing
 
 def copy_trajectories( trajectories ):
   newthing = {}
-  for s,t in trajectories.iteritems():
+  for s,t in trajectories.items():
     newthing[s] = {}
-    for u,v in t.iteritems():
+    for u,v in t.items():
       newthing[s][u] = v
   return newthing
 
@@ -63,17 +63,17 @@ def __save_state(precursor_or_names, *args):
   savers = {'.whiskers':     save_whiskers,
             '.trajectories': save_trajectories,
             '.measurements': save_measurements }
-  names = dict([ (k,None) for k in savers.iterkeys() ])
+  names = dict([ (k,None) for k in savers.keys() ])
 
   #
   # Construct output filenames
   #
   if not isinstance(precursor_or_names, str ) and hasattr( precursor_or_names, '__iter__' ):
     #multiple names...try to find names for the different filetypes, otherwise guess
-    for fn,(p,e) in zip( precursor_or_names, map( os.path.splitext, precursor_or_names ) ):
+    for fn,(p,e) in zip( precursor_or_names, list(map( os.path.splitext, precursor_or_names )) ):
       names[e] = fn #build map of extentions --> filenames
     precursor = p   #use the last filename for the precursor
-    for e,fn in names.iteritems():
+    for e,fn in names.items():
       if fn is None:               # if the extension has no corresponding filename
         names[e] = precursor +  e  #    then construct one using the precursor
 
@@ -81,14 +81,14 @@ def __save_state(precursor_or_names, *args):
     #single valued, assume it's a filename or precursor
     precursor = os.path.splitext(precursor_or_names)[0]
     
-    for e in names.iterkeys():
+    for e in names.keys():
       names[e] = precursor + e
   else:
     raise TypeError(" precursor_or_names must be string or iterable ")
 
   # Measurements and Trajectories files are somewhat redundant.
   # Save to the file that identities were loaded from.
-  ext = map( lambda n: os.path.splitext(n)[-1], precursor_or_names )
+  ext = [os.path.splitext(n)[-1] for n in precursor_or_names]
   if '.trajectories' in ext:
     del names['.measurements']
   elif '.measurements' in ext:
@@ -100,14 +100,14 @@ def __save_state(precursor_or_names, *args):
   # Call the individual save functions
   #
   do_nothing = lambda *args: None  #this gets called for unrecognized extensions
-  for extension,filename in names.iteritems():
-    print 'Saving ',extension,'...',
+  for extension,filename in names.items():
+    print('Saving ',extension,'...', end=' ')
     sys.stdout.flush()
     savers.get(extension,do_nothing)(filename,*args) 
-    print 'Done'
+    print('Done')
 
 def save_state( precursor_or_names, whiskers, trajectories, facehint ):
-  print "save state: "+str(precursor_or_names)
+  print("save state: "+str(precursor_or_names))
   __save_state(precursor_or_names,whiskers,trajectories, facehint)
 
 def load_state( precursor_or_names ):
@@ -116,13 +116,13 @@ def load_state( precursor_or_names ):
              '.trajectories': load_trajectories,
              '.bar':          load_bar_centers,
              '.measurements': load_measurements } 
-  names = dict([ (k,None) for k in loaders.keys() ])
+  names = dict([ (k,None) for k in list(loaders.keys()) ])
   #import pdb; pdb.set_trace()
   if not isinstance(precursor_or_names, str ) and hasattr( precursor_or_names, '__iter__' ):
     #multiple names...try to find names for the different filetypes, otherwise guess
     
-    precursor_or_names = filter( lambda name: (os.path.splitext(name)[1] in loaders.keys()), precursor_or_names )
-    for fn,(p,e) in zip( precursor_or_names, map( os.path.splitext, precursor_or_names ) ):
+    precursor_or_names = [name for name in precursor_or_names if (os.path.splitext(name)[1] in list(loaders.keys()))]
+    for fn,(p,e) in zip( precursor_or_names, list(map( os.path.splitext, precursor_or_names )) ):
       names[e] = fn
     # Measurements and Trajectories files are somewhat redundant.
     if names['.measurements']:
@@ -135,13 +135,13 @@ def load_state( precursor_or_names ):
       del names['.trajectories']
       del order[1]
     precursor = p
-    for e,fn in names.iteritems(): #try to guess the unspecified ones
+    for e,fn in names.items(): #try to guess the unspecified ones
       if fn is None:
         names[e] = precursor +  e
 
   elif isinstance(precursor_or_names,str): #single valued, assume it's a filename or precursor
     precursor = os.path.splitext(precursor_or_names)[0]
-    for k,v in names.iteritems():
+    for k,v in names.items():
       names[k] = precursor + k
     # Measurements and Trajectories files are somewhat redundant.
     if os.path.exists(names['.measurements']):
@@ -158,21 +158,21 @@ def load_state( precursor_or_names ):
   
     
   def logload(t,v):
-    print "Loaded: ",t
+    print("Loaded: ",t)
     return v
-  print 'Loading...'
+  print('Loading...')
   objs = [logload(t,loaders[os.path.splitext(names[t])[1]](names[t])[0]) for t in order]
   objs.append(0) #append a legit trajectory id....assuming 0...this should probably get taken out later
   # dark magic - rewrite precursor_or_names with the names used...this will bias the save function to save
   #              to the same names...I think
-  precursor_or_names = names.values()
+  precursor_or_names = list(names.values())
   return objs
 
 def load_measurements( name ):
   try:
     return [traj.MeasurementsTable(name).get_trajectories(),0]
   except IOError:
-    print "Couldn't open file. Creating: ", name
+    print("Couldn't open file. Creating: ", name)
     return {},0
 
 def save_measurements( name, *args ):
@@ -184,10 +184,10 @@ def load_whiskers( filename ):
     w = Load_Whiskers( filename )
     wid = 0;
     if len(w):
-      wid = w.values()[0].keys()[0]
+      wid = list(w.values())[0].keys()[0]
     return w,wid      
   except:
-    print "Couldn't open file. Creating: ", filename
+    print("Couldn't open file. Creating: ", filename)
     return {},0
 
 def save_whiskers( filename, *args ):
@@ -196,9 +196,9 @@ def save_whiskers( filename, *args ):
 def save_trajectories( filename, *args ):
   f = open( filename, 'w' )
   trajectories = args[1]
-  for k,v in trajectories.iteritems():
-    for s,t in v.iteritems():
-      print >> f, '%d,%d,%d'%(k,s,t)
+  for k,v in trajectories.items():
+    for s,t in v.items():
+      print('%d,%d,%d'%(k,s,t), file=f)
 
 def load_trajectories( filename ):
   trajectories = {}
@@ -212,9 +212,9 @@ def load_trajectories( filename ):
         trajectories[t[0]] = {}
       trajectories[ t[0] ][ t[1] ] = t[2];
 
-    return trajectories, trajectories.keys()[0]
+    return trajectories, list(trajectories.keys())[0]
   except:
-    print "Couldn't open file. Creating: ", filename
+    print("Couldn't open file. Creating: ", filename)
     return {},0
 
 def load_bar_centers( filename ):
