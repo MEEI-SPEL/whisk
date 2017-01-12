@@ -26,6 +26,7 @@ from warnings import warn
 
 from numpy import where, cos, sin, sum
 from numpy import zeros, float32, uint8, array, hypot, arctan2, pi, concatenate, float64, ndarray, int32
+import matplotlib.pyplot as plt
 
 dllpath = os.path.split(os.path.abspath(__file__))[0]
 if sys.platform == 'win32':
@@ -84,8 +85,9 @@ class cObject_Map(Structure):
             self.objects[i].contents.plot(*args, **kwargs)
 
     def plot_with_seeds(self, image, *args, **kwargs):
-        from pylab import imshow, cm, axis, subplots_adjust, show
-        imshow(image, cmap=cm.gray, hold=0, interpolation='nearest')
+        from pylab import imshow, axis, subplots_adjust, show
+
+        imshow(image, cmap=plt.cm.grey, hold=0, interpolation='nearest')
         self.plot(*args, **kwargs)
         for i in range(self.num_objects):
             sds = find_seeds(self.objects[i], image)
@@ -97,7 +99,7 @@ class cObject_Map(Structure):
         axis('off')
         subplots_adjust(0, 0, 1, 1, 0, 0)
         show()
-        return gcf()
+        return plt.gcf()
 
     def draw(self, surface, color, scale, drawfunc):
         for i in range(self.num_objects):
@@ -165,7 +167,7 @@ class cWhisker_Seg(Structure):  # typedef struct
         nseg = sum(map(len, list(wvd.values())))
 
         # create the constructor
-        type_wv = cWhisker_Seg * nseg;
+        type_wv = cWhisker_Seg * nseg
 
         # alloc and fill the array
         def itersegs(wvd):
@@ -384,7 +386,7 @@ def Load_Whiskers(filename):
     if not os.path.exists(filename):
         raise IOError("File not found.")
     nwhiskers = c_int(0)
-    wv = cWhisk.Load_Whiskers(filename, None, byref(nwhiskers));
+    wv = cWhisk.Load_Whiskers(filename, None, byref(nwhiskers))
     # organize into dictionary for ui.py {frameid}{segid}
     whiskers = {}
     for idx in range(nwhiskers.value):
@@ -860,7 +862,7 @@ def viterbi_log2(sequence, start, transitions, emmissions, do_checks=True):
         if not isinstance(sequence, ndarray):
             sequence = array(sequence, dtype=int32)
         if sequence.dtype != int32:
-            sequence = sequence.astpye(int32)
+            sequence = sequence.astype(int32)
 
         # check sizes
         nstates = start.shape[0]
@@ -878,3 +880,8 @@ def viterbi_log2(sequence, start, transitions, emmissions, do_checks=True):
     ret = res.contents.get()
     cWhisk.Free_Viterbi_Result(res)
     return ret
+
+
+if __name__ == "__main__":
+    filepath = """C:\\Users\\VoyseyG\\Downloads\\movie.whiskers"""
+    res = Load_Whiskers(filepath)
