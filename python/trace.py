@@ -1,3 +1,25 @@
+"""
+Trace.py
+
+Whisk data extractor.  Returns traces for each whisker stored in a binary file created when Whisk.exe runs.
+
+Usage:
+    trace.py -h | --help
+    trace.py --version
+    trace.py (-i <input_file> | --input <input_file>)
+
+Options:
+    -h --help                   Show this screen and exit.
+    --version                   Display the version and exit.
+    -i --input=<input_file>     Specify the file to process.
+"""
+from docopt import docopt
+from os import path
+import collections
+import numpy as np
+from json_tricks import dumps
+
+
 """ trace.py
 
 ctypes interface to libwhisk.so
@@ -27,6 +49,7 @@ from warnings import warn
 from numpy import where, cos, sin, sum
 from numpy import zeros, float32, uint8, array, hypot, arctan2, pi, concatenate, float64, ndarray, int32
 from matplotlib import pyplot as plt
+
 dllpath = os.path.split(os.path.abspath(__file__))[0]
 if sys.platform == 'win32':
     lib = os.path.join(dllpath, 'whisk.dll')
@@ -97,7 +120,7 @@ class cObject_Map(Structure):
         axis('off')
         subplots_adjust(0, 0, 1, 1, 0, 0)
         show()
-        return gcf()
+        return plt.gcf()
 
     def draw(self, surface, color, scale, drawfunc):
         for i in xrange(self.num_objects):
@@ -877,7 +900,25 @@ def viterbi_log2(sequence, start, transitions, emmissions, do_checks=True):
     return ret
 
 
-if __name__ == "__main__":
-    filepath = """C:\\Users\\VoyseyG\\Downloads\\movie.whiskers"""
+def __validate_args(args):
+    """
+    Makes sure the arguments passed in are reasonable.
+    """
+    if not path.isfile(args['--input']):
+        raise NameError('{0} not found!'.format(args['--input']))
+
+
+def main(inputargs):
+    args = docopt(__doc__, argv=inputargs)
+    filepath = args['--input']  # """C:\\Users\\VoyseyG\\Downloads\\movie.whiskers"""
     res = Load_Whiskers(filepath)
-    print res
+    retval = collections.defaultdict(dict)
+    for frame, segments in res.iteritems():
+        for segind, seg in segments.iteritems():
+            retval[frame][segind] = {'x': seg.x, 'y': seg.y}
+    print dumps(retval)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:] if len(sys.argv) > 1 else ""))
