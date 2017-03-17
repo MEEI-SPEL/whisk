@@ -6,19 +6,19 @@ Whisk data extractor.  Returns traces for each whisker stored in a binary file c
 Usage:
     trace.py -h | --help
     trace.py --version
-    trace.py (-i <input_file> | --input <input_file>)
+    trace.py (-i <input_file> | --input <input_file>) -o <output_file>
 
 Options:
     -h --help                   Show this screen and exit.
     --version                   Display the version and exit.
     -i --input=<input_file>     Specify the file to process.
+    -o=<output_file>            Specify the file to create.
 """
 from docopt import docopt
 from os import path
 import collections
 import numpy as np
 from json_tricks import dumps
-
 
 """ trace.py
 
@@ -907,16 +907,52 @@ def __validate_args(args):
     if not path.isfile(args['--input']):
         raise NameError('{0} not found!'.format(args['--input']))
 
+def compute_vector_angle(x, y):
+    """
+    Estimate the vector angle given by the parametric vectors x and y relative to the euclidian axis.
+    :param x:
+    :param y:
+    :return:
+    """
+    # normalize
+    x_end = x[-1] - x[0]
+    y_end = y[-1] - y[0]
+    try:
+        retval = np.arctan(y_end / x_end)
+        return np.degrees(retval)
+    except ZeroDivisionError:
+        return np.nan
+
 
 def main(inputargs):
+    from collections import namedtuple
+    import pandas as pd
+    timedata = namedtuple("timedata", "frameid,mean_degrees,num_whiskers,stderr")
     args = docopt(__doc__, argv=inputargs)
     filepath = args['--input']  # """C:\\Users\\VoyseyG\\Downloads\\movie.whiskers"""
     res = Load_Whiskers(filepath)
-    retval = collections.defaultdict(dict)
+    # retval = collections.defaultdict(dict)
+    # for frame, segments in res.iteritems():
+    #     for segind, seg in segments.iteritems():
+    #         retval[frame][segind] = {'x': seg.x, 'y': seg.y}
+    # print dumps(retval)
+    retval = []
     for frame, segments in res.iteritems():
+        degrees = []
         for segind, seg in segments.iteritems():
-            retval[frame][segind] = {'x': seg.x, 'y': seg.y}
-    print dumps(retval)
+            thisx = seg.x
+            thisy = seg.y
+            degrees.append(compute_vector_angle(thisx, thisy))
+        mean_degrees = np.mean(np.abs(degrees))
+        stderr = np.std(degrees) / np.sqrt(len(degrees))
+        retval.append(timedata(frameid=int(frame),
+                               mean_degrees=mean_degrees,
+                               num_whiskers=len(degrees),
+                               stderr=stderr))
+    retval = pd.DataFrame(retval).sort('frameid')
+    retval['mean_degrees'] = retval['mean_degrees'].replace(np.nan, 0, regex=True)
+    retval.to_csv(args['-o'])
+
     return 0
 
 
