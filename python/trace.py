@@ -16,9 +16,7 @@ Options:
 """
 from docopt import docopt
 from os import path
-import collections
 import numpy as np
-from json_tricks import dumps
 
 """ trace.py
 
@@ -927,9 +925,10 @@ def compute_vector_angle(x, y):
 def main(inputargs):
     from collections import namedtuple
     import pandas as pd
-    timedata = namedtuple("timedata", "frameid,mean_degrees,num_whiskers,stderr")
+
     args = docopt(__doc__, argv=inputargs)
     filepath = args['--input']  # """C:\\Users\\VoyseyG\\Downloads\\movie.whiskers"""
+    timedata = namedtuple("timedata", "frameid,mean_degrees,num_whiskers,stderr")
     res = Load_Whiskers(filepath)
     # retval = collections.defaultdict(dict)
     # for frame, segments in res.iteritems():

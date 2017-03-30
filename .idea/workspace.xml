@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="67756b18-c06d-4463-badf-d06945b8b2ff" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/python/trace.py" afterPath="$PROJECT_DIR$/python/trace.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -14,8 +13,8 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/whisk$read_script_test.coverage" NAME="read_script_test Coverage Results" MODIFIED="1481825569460" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python" />
-    <SUITE FILE_PATH="coverage/whisk$traj.coverage" NAME="traj Coverage Results" MODIFIED="1488484333481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python" />
     <SUITE FILE_PATH="coverage/whisk$trace.coverage" NAME="trace Coverage Results" MODIFIED="1489787451843" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python" />
+    <SUITE FILE_PATH="coverage/whisk$traj.coverage" NAME="traj Coverage Results" MODIFIED="1490298025075" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python" />
     <SUITE FILE_PATH="coverage/whisk$get_measurements.coverage" NAME="get_measurements Coverage Results" MODIFIED="1488484444495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python" />
     <SUITE FILE_PATH="coverage/whisk$measure.coverage" NAME="measure Coverage Results" MODIFIED="1488484255965" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/python" />
   </component>
@@ -70,8 +69,8 @@
       <file leaf-file-name="trace.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/python/trace.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="795">
-              <caret line="954" column="29" lean-forward="true" selection-start-line="954" selection-start-column="29" selection-end-line="954" selection-end-column="29" />
+            <state relative-caret-position="833">
+              <caret line="955" column="12" lean-forward="true" selection-start-line="955" selection-start-column="12" selection-end-line="955" selection-end-column="12" />
               <folding>
                 <element signature="e#505#530#0" expanded="true" />
               </folding>
@@ -92,8 +91,8 @@
       <file leaf-file-name="traj.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/python/traj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2052">
-              <caret line="108" column="8" lean-forward="false" selection-start-line="108" selection-start-column="8" selection-end-line="108" selection-end-column="8" />
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding>
                 <element signature="e#317#331#0" expanded="true" />
               </folding>
@@ -137,6 +136,7 @@
       <find>;</find>
       <find>main</find>
       <find>Could not open parameter file at default.parameters.</find>
+      <find>print</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -220,7 +220,6 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -277,6 +276,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -291,7 +291,7 @@
       <recent name="C:\Users\VoyseyG\Projects\whisk\python" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.trace">
+  <component name="RunManager" selected="Python.traj">
     <configuration default="false" name="read_script_test" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -605,8 +605,8 @@
     </list>
     <recent_temporary>
       <list size="4">
-        <item index="0" class="java.lang.String" itemvalue="Python.trace" />
-        <item index="1" class="java.lang.String" itemvalue="Python.traj" />
+        <item index="0" class="java.lang.String" itemvalue="Python.traj" />
+        <item index="1" class="java.lang.String" itemvalue="Python.trace" />
         <item index="2" class="java.lang.String" itemvalue="Python.measure" />
         <item index="3" class="java.lang.String" itemvalue="Python.read_script_test" />
       </list>
@@ -670,7 +670,7 @@
     <frame x="-8" y="-8" width="1936" height="1176" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13020833" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1296875" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32958803" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3295562" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -722,8 +722,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/python/trace.py</url>
-          <line>951</line>
+          <line>950</line>
           <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/python/traj.py</url>
+          <line>929</line>
+          <option name="timeStamp" value="28" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -733,7 +738,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="28" />
+      <option name="time" value="29" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -997,18 +1002,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/python/get_measurements.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="76">
-          <caret line="4" column="32" lean-forward="false" selection-start-line="4" selection-start-column="32" selection-end-line="4" selection-end-column="32" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/python/get_measurements.py" />
     <entry file="file://$PROJECT_DIR$/python/traj.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2052">
-          <caret line="108" column="8" lean-forward="false" selection-start-line="108" selection-start-column="8" selection-end-line="108" selection-end-column="8" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#317#331#0" expanded="true" />
           </folding>
@@ -1017,8 +1015,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/python/trace.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="795">
-          <caret line="954" column="29" lean-forward="true" selection-start-line="954" selection-start-column="29" selection-end-line="954" selection-end-column="29" />
+        <state relative-caret-position="833">
+          <caret line="955" column="12" lean-forward="true" selection-start-line="955" selection-start-column="12" selection-end-line="955" selection-end-column="12" />
           <folding>
             <element signature="e#505#530#0" expanded="true" />
           </folding>
