@@ -948,7 +948,7 @@ def main(inputargs):
                                mean_degrees=mean_degrees,
                                num_whiskers=len(degrees),
                                stderr=stderr))
-    retval = pd.DataFrame(retval).sort('frameid')
+    retval = pd.DataFrame(retval).sort_values('frameid')
     retval = retval.set_index('frameid')
     retval['mean_degrees'] = retval['mean_degrees'].replace(np.nan, 0, regex=True)
     retval.to_csv(args['-o'])
