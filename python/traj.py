@@ -938,4 +938,3 @@ if __name__ == '__main__':
     suite.addTest(doctest.DocTestSuite())
     runner = unittest.TextTestRunner(verbosity=2, descriptions=1).run(suite)
 
-
