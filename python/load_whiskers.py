@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 """
 load_whiskers.py
 
